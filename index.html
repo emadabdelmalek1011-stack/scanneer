@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>?? Pump.Fun Token Scanner</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: #060612;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(0,255,136,.06) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 70%, rgba(0,120,255,.06) 0%, transparent 55%);
+            z-index: -1;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+        /* -- HEADER -- */
+        .header { text-align: center; padding: 36px 0 24px; }
+        .header h1 {
+            font-size: clamp(1.6rem, 4vw, 2.8rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, #00ff88 0%, #00c8ff 50%, #ff00aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .header p { color: #666; margin-top: 8px; font-size: .95rem; }
+
+        /* -- SEARCH -- */
+        .search-box {
+            background: rgba(255,255,255,.03);
+            border: 1px solid rgba(0,255,136,.18);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+        .search-row { display: flex; gap: 12px; flex-wrap: wrap; }
+        .search-input {
+            flex: 1; min-width: 260px;
+            padding: 16px 20px;
+            background: rgba(0,0,0,.45);
+            border: 2px solid rgba(0,255,136,.25);
+            border-radius: 12px;
+            color: #00ff88;
+            font-size: .95rem;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            direction: ltr;
+            transition: border .25s, box-shadow .25s;
+        }
+        .search-input:focus {
+            border-color: #00ff88;
+            box-shadow: 0 0 18px rgba(0,255,136,.25);
+        }
+        .search-input::placeholder { color: #3a3a3a; }
+
+        .scan-btn {
+            padding: 16px 36px;
+            background: linear-gradient(135deg, #00ff88, #00c060);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .scan-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,255,136,.35); }
+        .scan-btn:disabled { background: #333; color: #666; transform: none; box-shadow: none; cursor: not-allowed; }
+
+        /* RPC Status */
+        .rpc-status {
+            margin-top: 14px;
+            font-size: .8rem;
+            color: #555;
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .rpc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 5px; }
+        .rpc-dot.ok { background: #00ff88; }
+        .rpc-dot.bad { background: #ff3232; }
+        .rpc-dot.checking { background: #ffc800; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100%{opacity:.4} 50%{opacity:1} }
+
+        /* -- LOADER -- */
+        .loader { display: none; text-align: center; padding: 60px 0; }
+        .loader.active { display: block; }
+        .spinner {
+            width: 56px; height: 56px;
+            border: 4px solid rgba(0,255,136,.1);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 18px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader p { color: #00ff88; font-size: 1.1rem; animation: pulse 2s infinite; }
+
+        /* -- ERROR -- */
+        .error-box {
+            display: none;
+            background: rgba(255,50,50,.08);
+            border: 1px solid rgba(255,50,50,.3);
+            border-radius: 14px;
+            padding: 20px 24px;
+            color: #ff6060;
+            margin: 16px 0;
+            line-height: 1.7;
+        }
+        .error-box.active { display: block; }
+
+        /* -- RESULTS -- */
+        .results { display: none; }
+        .results.active { display: block; animation: fadeUp .45s ease; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:none} }
+
+        /* Score card */
+        .score-card {
+            border-radius: 22px;
+            padding: 36px;
+            text-align: center;
+            margin-bottom: 22px;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid;
+        }
+        .score-card::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:4px;
+        }
+        .score-card.safe   { border-color:rgba(0,255,136,.4);  background:rgba(0,255,136,.04);  }
+        .score-card.warn   { border-color:rgba(255,200,0,.4);  background:rgba(255,200,0,.04);  }
+        .score-card.danger { border-color:rgba(255,50,50,.4);  background:rgba(255,50,50,.04);  }
+        .score-card.safe::before   { background:linear-gradient(90deg,#00ff88,#00cc60); }
+        .score-card.warn::before   { background:linear-gradient(90deg,#ffc800,#ff9900); }
+        .score-card.danger::before { background:linear-gradient(90deg,#ff3232,#cc0000); }
+
+        .score-name { font-size:1.3rem; color:#aaa; margin-bottom:6px; }
+        .score-num  { font-size:5rem;  font-weight:900; line-height:1; }
+        .score-card.safe   .score-num { color:#00ff88; }
+        .score-card.warn   .score-num { color:#ffc800; }
+        .score-card.danger .score-num { color:#ff3232; }
+
+        .verdict {
+            display:inline-block; margin-top:14px;
+            padding:10px 28px; border-radius:50px;
+            font-size:1.05rem; font-weight:700;
+        }
+        .score-card.safe   .verdict { background:rgba(0,255,136,.12); color:#00ff88; border:1px solid rgba(0,255,136,.3); }
+        .score-card.warn   .verdict { background:rgba(255,200,0,.12);  color:#ffc800; border:1px solid rgba(255,200,0,.3);  }
+        .score-card.danger .verdict { background:rgba(255,50,50,.12);  color:#ff3232; border:1px solid rgba(255,50,50,.3);  }
+
+        /* Quick stats */
+        .stats-grid {
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px,1fr));
+            gap:14px;
+            margin-bottom:22px;
+        }
+        .stat-card {
+            background:rgba(255,255,255,.03);
+            border:1px solid rgba(255,255,255,.08);
+            border-radius:14px;
+            padding:18px;
+            text-align:center;
+        }
+        .stat-val  { font-size:1.55rem; font-weight:900; margin:6px 0; }
+        .stat-lbl  { font-size:.78rem; color:#666; }
+
+        /* Info grid */
+        .info-grid {
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px,1fr));
+            gap:18px;
+            margin-bottom:22px;
+        }
+        .card {
+            background:rgba(255,255,255,.025);
+            border:1px solid rgba(255,255,255,.08);
+            border-radius:18px;
+            padding:24px;
+            transition:border .25s, transform .25s;
+        }
+        .card:hover { border-color:rgba(0,255,136,.25); transform:translateY(-4px); }
+        .card h3 {
+            font-size:1rem; margin-bottom:16px;
+            padding-bottom:10px;
+            border-bottom:1px solid rgba(255,255,255,.08);
+            display:flex; align-items:center; gap:8px;
+        }
+        .row {
+            display:flex; justify-content:space-between; align-items:center;
+            padding:9px 0; border-bottom:1px solid rgba(255,255,255,.04);
+        }
+        .row:last-child { border-bottom:none; }
+        .lbl { color:#666; font-size:.88rem; }
+        .val { font-weight:700; font-size:.92rem; direction:ltr; }
+        .g { color:#00ff88; } .r { color:#ff4444; }
+        .y { color:#ffc800; } .b { color:#00aaff; } .w { color:#fff; }
+
+        /* Holders table */
+        .holders-wrap { margin-bottom:22px; }
+        table { width:100%; border-collapse:collapse; margin-top:14px; font-size:.84rem; }
+        thead th { background:rgba(0,255,136,.08); padding:10px 12px; text-align:right; color:#00ff88; }
+        tbody td { padding:9px 12px; border-bottom:1px solid rgba(255,255,255,.04); }
+        tbody tr:hover { background:rgba(0,255,136,.04); }
+        .addr { font-family:'Courier New',monospace; color:#00aaff; direction:ltr; }
+
+        /* Progress bar */
+        .prog { height:7px; background:rgba(255,255,255,.08); border-radius:6px; overflow:hidden; margin:6px 0 14px; }
+        .prog-fill { height:100%; border-radius:6px; }
+
+        /* Risk items */
+        .risk-item {
+            display:flex; align-items:flex-start; gap:10px;
+            padding:11px 14px; border-radius:11px; margin:7px 0;
+            font-size:.9rem; line-height:1.5;
+        }
+        .risk-item.ok   { background:rgba(0,255,136,.08); border:1px solid rgba(0,255,136,.18); }
+        .risk-item.bad  { background:rgba(255,50,50,.08);  border:1px solid rgba(255,50,50,.18);  }
+        .risk-item.warn { background:rgba(255,200,0,.08);  border:1px solid rgba(255,200,0,.18);  }
+
+        /* Target grid */
+        .target-card {
+            background:linear-gradient(135deg,rgba(0,120,255,.08),rgba(0,255,136,.08));
+            border:1px solid rgba(0,120,255,.25);
+            border-radius:18px;
+            padding:28px;
+            margin-bottom:22px;
+            text-align:center;
+        }
+        .target-card h3 { color:#00aaff; font-size:1.2rem; margin-bottom:20px; }
+        .target-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; }
+        .target-item { background:rgba(0,0,0,.3); border-radius:13px; padding:18px 10px; }
+        .target-item .mx { font-size:1.9rem; font-weight:900; }
+        .target-item .tl { font-size:.78rem; color:#666; margin:4px 0; }
+        .target-item .pb { font-size:.82rem; font-weight:700; }
+
+        /* Dev history */
+        .dev-item {
+            display:flex; align-items:center; gap:12px;
+            padding:11px; background:rgba(0,0,0,.2);
+            border-radius:11px; margin:7px 0;
+        }
+        .badge {
+            padding:4px 12px; border-radius:20px;
+            font-size:.75rem; font-weight:700;
+            white-space:nowrap;
+        }
+        .badge.rug  { background:rgba(255,50,50,.2);  color:#ff4444; }
+        .badge.live { background:rgba(0,255,136,.2);  color:#00ff88; }
+        .badge.dead { background:rgba(255,200,0,.2);  color:#ffc800; }
+
+        /* Cluster */
+        .cluster-box {
+            background:rgba(255,50,50,.06);
+            border:2px solid rgba(255,50,50,.3);
+            border-radius:18px;
+            padding:24px;
+            margin-bottom:22px;
+        }
+        .cluster-box h3 { color:#ff4444; margin-bottom:12px; }
+
+        /* Links */
+        .links-row { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; }
+        .link-btn {
+            padding:8px 18px; border-radius:9px;
+            text-decoration:none; font-size:.82rem;
+            font-weight:700; font-family:'Cairo',sans-serif;
+            transition:filter .2s, transform .2s;
+            display:flex; align-items:center; gap:5px;
+        }
+        .link-btn:hover { filter:brightness(1.25); transform:translateY(-2px); }
+        .lb-g { background:rgba(0,255,136,.12); color:#00ff88; border:1px solid rgba(0,255,136,.25); }
+        .lb-b { background:rgba(0,170,255,.12); color:#00aaff; border:1px solid rgba(0,170,255,.25); }
+        .lb-y { background:rgba(255,200,0,.12);  color:#ffc800; border:1px solid rgba(255,200,0,.25);  }
+
+        .copy-btn {
+            background:none; border:1px solid rgba(0,170,255,.3);
+            color:#00aaff; padding:2px 8px; border-radius:6px;
+            cursor:pointer; font-size:.72rem; font-family:'Cairo',sans-serif;
+            transition:background .2s;
+        }
+        .copy-btn:hover { background:rgba(0,170,255,.15); }
+
+        .disclaimer {
+            background:rgba(255,200,0,.04);
+            border:1px solid rgba(255,200,0,.18);
+            border-radius:12px;
+            padding:16px 20px;
+            text-align:center;
+            color:#8a7000;
+            font-size:.8rem;
+            margin-top:28px;
+        }
+
+        /* Source tag */
+        .source-tag {
+            display:inline-block; padding:2px 8px;
+            border-radius:5px; font-size:.7rem;
+            margin-right:6px; vertical-align:middle;
+        }
+        .src-pf  { background:rgba(0,255,136,.15); color:#00ff88; }
+        .src-sol { background:rgba(0,170,255,.15); color:#00aaff; }
+        .src-est { background:rgba(255,200,0,.15);  color:#ffc800; }
+
+        @media(max-width:600px){
+            .header h1{font-size:1.4rem}
+            .info-grid{grid-template-columns:1fr}
+            .score-num{font-size:3.5rem}
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <h1>?? Pump.Fun Token Scanner</h1>
+        <p>???? ?????? ????? · ????? ???? ??????? ????????? ???????????</p>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-box">
+        <div class="search-row">
+            <input class="search-input" id="tokenAddress"
+                placeholder="???? ????? ????? ??? … (Solana mint address)"
+                spellcheck="false" autocomplete="off">
+            <button class="scan-btn" id="scanBtn" onclick="startScan()">
+                <span>??</span><span>???? ?????</span>
+            </button>
+        </div>
+        <div class="rpc-status" id="rpcStatus">
+            <span><span class="rpc-dot checking" id="d1"></span>???? ??? RPC...</span>
+        </div>
+    </div>
+
+    <!-- LOADER -->
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <p id="loadTxt">???? ?????…</p>
+    </div>
+
+    <!-- ERROR -->
+    <div class="error-box" id="errBox"></div>
+
+    <!-- RESULTS -->
+    <div class="results" id="results">
+        <div class="score-card" id="scoreCard">
+            <div class="score-name" id="scoreName"></div>
+            <div class="score-num"  id="scoreNum"></div>
+            <div class="verdict"    id="verdict"></div>
+        </div>
+
+        <div class="stats-grid"  id="statsGrid"></div>
+        <div class="info-grid"   id="infoGrid"></div>
+        <div class="holders-wrap" id="holdersWrap"></div>
+        <div id="clusterBox"></div>
+        <div id="devBox"></div>
+        <div class="target-card" id="targetCard"></div>
+        <div class="card"        id="riskCard" style="margin-bottom:22px"></div>
+        <div class="card"        id="linksCard" style="margin-bottom:22px"></div>
+        <div class="disclaimer">
+            ?? ??? ??????? ??????? ????????? ??? ???? ????? ?????.
+            DYOR ?????? ??? ?? ???????.
+        </div>
+    </div>
+
+</div>
+<script>
+/* -------------------------------------------------------
+   RPC POOL  –  multiple endpoints to avoid CORS/rate-limit
+   ------------------------------------------------------- */
+const RPC_POOL = [
+    'https://solana-mainnet.g.alchemy.com/v2/demo',          // Alchemy demo
+    'https://rpc.ankr.com/solana',                            // Ankr (CORS-friendly)
+    'https://mainnet.helius-rpc.com/?api-key=demo',           // Helius demo
+    'https://solana-api.projectserum.com',                    // Serum
+    'https://api.mainnet-beta.solana.com',                    // Official (may fail on file://)
+];
+
+let activeRPC = null;
+
+/* -- find a working RPC on page load -- */
+async function detectRPC() {
+    const statusEl = document.getElementById('rpcStatus');
+    for (const url of RPC_POOL) {
+        try {
+            const r = await fetchRPC(url, 'getHealth', [], 4000);
+            if (r && !r.error) {
+                activeRPC = url;
+                const short = url.replace('https://','').split('/')[0];
+                statusEl.innerHTML =
+                    `<span><span class="rpc-dot ok"></span>RPC ????: <b>${short}</b></span>`;
+                return;
+            }
+        } catch { }
+    }
+    statusEl.innerHTML =
+        `<span><span class="rpc-dot bad"></span>
+         ?????: ?? ?????? RPC ????? – ???????? ???? ??? endpoints ??? ?????</span>`;
+}
+
+/* -- raw RPC call with timeout -- */
+async function fetchRPC(url, method, params, timeout = 10000) {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), timeout);
+    try {
+        const r = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jsonrpc:'2.0', id:1, method, params }),
+            signal: ctrl.signal
+        });
+        clearTimeout(tid);
+        return await r.json();
+    } catch (e) {
+        clearTimeout(tid);
+        throw e;
+    }
+}
+
+/* -- RPC call that tries pool automatically -- */
+async function rpc(method, params) {
+    const urls = activeRPC
+        ? [activeRPC, ...RPC_POOL.filter(u => u !== activeRPC)]
+        : RPC_POOL;
+
+    for (const url of urls) {
+        try {
+            const res = await fetchRPC(url, method, params);
+            if (res && !res.error) {
+                activeRPC = url;
+                return res;
+            }
+        } catch { }
+    }
+    throw new Error(`??? ???? ??? RPC endpoints (${method})`);
+}
+
+/* -------------------------------------------------------
+   TOKEN INFO
+   ------------------------------------------------------- */
+async function getTokenInfo(mint) {
+    let decimals=6, totalSupply=0, uiSupply=0;
+    let mintAuthority=null, freezeAuthority=null;
+
+    try {
+        const sr = await rpc('getTokenSupply', [mint]);
+        const sv = sr?.result?.value;
+        if (sv) {
+            decimals = sv.decimals;
+            totalSupply = sv.amount;
+            uiSupply = sv.uiAmount || 0;
+        }
+    } catch {}
+
+    try {
+        const ar = await rpc('getAccountInfo', [mint, { encoding:'jsonParsed' }]);
+        const info = ar?.result?.value?.data?.parsed?.info;
+        if (info) {
+            mintAuthority   = info.mintAuthority   || null;
+            freezeAuthority = info.freezeAuthority || null;
+            if (!decimals) decimals = info.decimals || 6;
+        }
+    } catch {}
+
+    /* Price from Jupiter v2 (no CORS issue – public API) */
+    let price = 0, marketCap = 0;
+    try {
+        const pr = await fetch(
+            `https://api.jup.ag/price/v2?ids=${mint}`,
+            { headers:{ 'Accept':'application/json' } }
+        );
+        if (pr.ok) {
+            const pd = await pr.json();
+            price = parseFloat(pd?.data?.[mint]?.price) || 0;
+            marketCap = price * uiSupply;
+        }
+    } catch {}
+
+    return { decimals, totalSupply, uiSupply, price, marketCap,
+             mintAuthority, freezeAuthority,
+             isRenounced: !mintAuthority };
+}
+
+/* -------------------------------------------------------
+   TOP HOLDERS
+   ------------------------------------------------------- */
+async function getTopHolders(mint, uiSupply) {
+    let holders = [];
+    try {
+        const r = await rpc('getTokenLargestAccounts', [mint]);
+        const raw = r?.result?.value || [];
+        holders = raw.map(a => ({
+            address : a.address,
+            amount  : parseFloat(a.uiAmount || 0),
+            percent : uiSupply > 0 ? parseFloat(a.uiAmount || 0) / uiSupply * 100 : 0,
+            owner   : null
+        }));
+    } catch(e) {
+        console.warn('getTokenLargestAccounts failed:', e.message);
+    }
+
+    /* Resolve owner wallet for top 10 */
+    const top10 = holders.slice(0, 10);
+    await Promise.allSettled(top10.map(async (h, i) => {
+        try {
+            const r2 = await rpc('getAccountInfo', [h.address, { encoding:'jsonParsed' }]);
+            const owner = r2?.result?.value?.data?.parsed?.info?.owner;
+            if (owner) holders[i].owner = owner;
+        } catch {}
+    }));
+
+    return {
+        holders,
+        top5Percent  : holders.slice(0, 5) .reduce((s,h) => s + h.percent, 0),
+        top10Percent : holders.slice(0, 10).reduce((s,h) => s + h.percent, 0),
+        holderCount  : holders.length,
+    };
+}
+
+/* -------------------------------------------------------
+   PUMP.FUN  DATA
+   ------------------------------------------------------- */
+async function getPumpData(mint) {
+    const def = {
+        isPumpFun:false, dev:null, devSolBalance:0,
+        bondingCurve:null, complete:false, raydiumPool:null,
+        name:'', symbol:'', description:'',
+        twitter:'', telegram:'', website:'',
+        marketCap:0, createdAt:null
+    };
+
+    /* CORS note: pump.fun API *does* send CORS headers for browser requests,
+       but only from https origins. We use a tiny public CORS proxy as fallback. */
+    const PF_URLS = [
+        `https://frontend-api.pump.fun/coins/${mint}`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent('https://frontend-api.pump.fun/coins/'+mint)}`,
+        `https://corsproxy.io/?${encodeURIComponent('https://frontend-api.pump.fun/coins/'+mint)}`
+    ];
+
+    for (const url of PF_URLS) {
+        try {
+            const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+            if (!r.ok) continue;
+            const d = await r.json();
+            if (!d || !d.mint) continue;
+
+            def.isPumpFun      = true;
+            def.dev            = d.creator       || null;
+            def.bondingCurve   = d.bonding_curve  || null;
+            def.complete       = d.complete        || false;
+            def.raydiumPool    = d.raydium_pool    || null;
+            def.name           = d.name            || '';
+            def.symbol         = d.symbol          || '';
+            def.description    = d.description     || '';
+            def.twitter        = d.twitter         || '';
+            def.telegram       = d.telegram        || '';
+            def.website        = d.website         || '';
+            def.marketCap      = d.usd_market_cap  || 0;
+            def.createdAt      = d.created_timestamp || null;
+            break;
+        } catch {}
+    }
+
+    /* Dev SOL balance */
+    if (def.dev) {
+        try {
+            const br = await rpc('getBalance', [def.dev]);
+            def.devSolBalance = (br?.result?.value || 0) / 1e9;
+        } catch {}
+    }
+
+    return def;
+}
+
+/* -------------------------------------------------------
+   DEV ANALYSIS
+   ------------------------------------------------------- */
+async function getDevAnalysis(pumpData, currentMint) {
+    const out = {
+        address: pumpData.dev || null,
+        totalTokens:0, ruggedTokens:0, successfulTokens:0, deadTokens:0,
+        tokens:[], reputation:'unknown', solBalance:pumpData.devSolBalance || 0,
+    };
+    if (!pumpData.dev) return out;
+
+    const DEV_URLS = [
+        `https://frontend-api.pump.fun/coins/user-created-coins/${pumpData.dev}?offset=0&limit=50&includeNsfw=true`,
+        `https://api.allorigins.win/raw?url=${encodeURIComponent('https://frontend-api.pump.fun/coins/user-created-coins/'+pumpData.dev+'?offset=0&limit=50&includeNsfw=true')}`,
+    ];
+
+    let tokens = [];
+    for (const url of DEV_URLS) {
+        try {
+            const r = await fetch(url, { signal: AbortSignal.timeout(8000) });
+            if (!r.ok) continue;
+            tokens = await r.json();
+            if (Array.isArray(tokens)) break;
+            tokens = [];
+        } catch {}
+    }
+
+    out.totalTokens = tokens.length;
+
+    for (const t of tokens.slice(0, 30)) {
+        const mcap = t.usd_market_cap || 0;
+        let status;
+        if (t.complete && t.raydium_pool && mcap > 40000) {
+            status = 'live'; out.successfulTokens++;
+        } else if (!t.complete && mcap < 800) {
+            status = 'rug'; out.ruggedTokens++;
+        } else {
+            status = 'dead'; out.deadTokens++;
+        }
+        out.tokens.push({
+            name: t.name || '?',
+            symbol: t.symbol || '?',
+            mint: t.mint,
+            mcap,
+            status,
+            isCurrent: t.mint === currentMint,
+        });
+    }
+
+    const rugPct = out.totalTokens > 0 ? out.ruggedTokens / out.totalTokens : 0;
+    if (out.totalTokens <= 1)      out.reputation = 'new';
+    else if (rugPct > 0.6)         out.reputation = 'scammer';
+    else if (rugPct > 0.3)         out.reputation = 'suspicious';
+    else if (out.successfulTokens >= 2) out.reputation = 'trusted';
+    else                           out.reputation = 'neutral';
+
+    return out;
+}
+
+/* -------------------------------------------------------
+   CLUSTER ANALYSIS
+   ------------------------------------------------------- */
+function analyzeCluster(holders) {
+    const out = { found:false, totalPct:0, riskLevel:'low', groups:[] };
+    const hs = holders.filter(h => h.percent >= 0.5 && h.percent < 25);
+    if (hs.length < 4) return out;
+
+    const used = new Set();
+    for (let i = 0; i < hs.length; i++) {
+        if (used.has(i)) continue;
+        const grp = [i];
+        for (let j = i+1; j < hs.length; j++) {
+            if (used.has(j)) continue;
+            const ratio = hs[i].amount > 0 ? hs[j].amount / hs[i].amount : 0;
+            if (ratio > 0.72 && ratio < 1.28) { grp.push(j); used.add(j); }
+        }
+        if (grp.length >= 3) {
+            const pct = grp.reduce((s,k) => s + hs[k].percent, 0);
+            out.groups.push({ count:grp.length, pct });
+            out.totalPct += pct;
+            out.found = true;
+        }
+        used.add(i);
+    }
+    if (out.totalPct > 30) out.riskLevel = 'high';
+    else if (out.totalPct > 15) out.riskLevel = 'medium';
+    return out;
+}
+
+/* -------------------------------------------------------
+   SCORE
+   ------------------------------------------------------- */
+function calcScore(tokenInfo, holdersData, pumpData, devAnalysis, cluster) {
+    let score = 100;
+    const risks = [], pros = [];
+
+    if (tokenInfo.mintAuthority) {
+        score -= 25;
+        risks.push('Mint Authority ?? ??? ?????? ???? – ???? ????? ????? ?????');
+    } else pros.push('Mint Authority ????? ???? ?');
+
+    if (tokenInfo.freezeAuthority) {
+        score -= 20;
+        risks.push('Freeze Authority ?????? – ???? ????? ???????');
+    } else pros.push('?? ???? Freeze Authority ?');
+
+    const t10 = holdersData.top10Percent;
+    if (t10 > 50) { score -= 20; risks.push(`???? 10 ????? ???? ${t10.toFixed(1)}% – ????? ???? ????`); }
+    else if (t10 > 30) { score -= 10; risks.push(`???? 10 ????? ???? ${t10.toFixed(1)}% – ????? ?????`); }
+    else pros.push(`????? ??? – ???? 10 ????? ???? ${t10.toFixed(1)}% ?`);
+
+    const top1 = holdersData.holders[0];
+    if (top1 && top1.percent > 20) {
+        score -= 15;
+        risks.push(`????? ????? ???? ${top1.percent.toFixed(1)}% – ??? Dump`);
+    }
+
+    if (cluster.found) {
+        const dec = cluster.riskLevel === 'high' ? 20 : 10;
+        score -= dec;
+        risks.push(`?????? ????? ???? ${cluster.totalPct.toFixed(1)}% – ?????? ?????`);
+    } else pros.push('?? ???????? ?????? ?');
+
+    if (devAnalysis.reputation === 'scammer') {
+        score -= 30;
+        risks.push(`?????? ???? ?????! ${devAnalysis.ruggedTokens}/${devAnalysis.totalTokens} Rug`);
+    } else if (devAnalysis.reputation === 'suspicious') {
+        score -= 15;
+        risks.push(`?????? ????? – ???? Rug ?????`);
+    } else if (devAnalysis.reputation === 'trusted') {
+        score += 5;
+        pros.push(`?????? ????? – ${devAnalysis.successfulTokens} ???? ????? ?`);
+    } else if (devAnalysis.reputation === 'new') {
+        score -= 5;
+        risks.push('?????? ???? – ?? ????? ????');
+    }
+
+    if (pumpData.isPumpFun) {
+        pros.push('?????? ??? Pump.Fun ?');
+        if (pumpData.complete) { score += 5; pros.push('????? Bonding Curve ?'); }
+        else { score -= 5; risks.push('Bonding Curve ?? ????? ???'); }
+        if (pumpData.raydiumPool) { score += 5; pros.push('Raydium Pool ????? ?'); }
+        if (!pumpData.twitter && !pumpData.telegram && !pumpData.website) {
+            score -= 5; risks.push('?? ?????? ?????');
+        } else {
+            if (pumpData.twitter)  pros.push('Twitter ????? ?');
+            if (pumpData.telegram) pros.push('Telegram ????? ?');
+            if (pumpData.website)  pros.push('???? ??? ????? ?');
+        }
+    }
+
+    score = Math.max(0, Math.min(100, Math.round(score)));
+    const mcap = pumpData.marketCap || tokenInfo.marketCap || 0;
+    return { score, risks, pros, mcap, targets: calcTargets(mcap, score) };
+}
+
+function calcTargets(mcap, score) {
+    const f = score / 100;
+    const mk = v => `$${fmt(mcap * v)}`;
+    const p  = (base, boost) => Math.min(base + boost * f, 75);
+    return [
+        { x:'2x',   mc:mk(2),   pct:p(28,35), },
+        { x:'5x',   mc:mk(5),   pct:p(14,25), },
+        { x:'10x',  mc:mk(10),  pct:p(7,18),  },
+        { x:'50x',  mc:mk(50),  pct:p(2,10),  },
+        { x:'100x', mc:mk(100), pct:p(1,6),   },
+    ].map(t => ({
+        ...t,
+        pct: t.pct.toFixed(0),
+        color: t.pct > 40 ? '#00ff88' : t.pct > 20 ? '#ffc800' : '#ff4444',
+    }));
+}
+
+/* -------------------------------------------------------
+   MAIN
+   ------------------------------------------------------- */
+async function startScan() {
+    const mint = document.getElementById('tokenAddress').value.trim();
+    if (!mint) return showErr('???? ????? ????? ?????');
+    if (!/^[A-Za-z0-9]{32,44}$/.test(mint)) return showErr('????? ????? ??? ????');
+
+    hideErr(); hideRes();
+    showLoad(true); setScanBtn(true);
+
+    try {
+        setTxt('???? ??? ??????? ??????…');
+        const tokenInfo = await getTokenInfo(mint);
+
+        setTxt('???? ????? ????????…');
+        const holdersData = await getTopHolders(mint, tokenInfo.uiSupply);
+
+        setTxt('???? ??? Pump.Fun…');
+        const pumpData = await getPumpData(mint);
+
+        setTxt('???? ????? ??????…');
+        const devAnalysis = await getDevAnalysis(pumpData, mint);
+
+        setTxt('???? ????? ?? ??????????…');
+        const cluster = analyzeCluster(holdersData.holders);
+
+        setTxt('???? ???? ???? ??????…');
+        const analysis = calcScore(tokenInfo, holdersData, pumpData, devAnalysis, cluster);
+
+        showLoad(false); setScanBtn(false);
+        render(mint, tokenInfo, holdersData, pumpData, devAnalysis, cluster, analysis);
+
+    } catch (e) {
+        showLoad(false); setScanBtn(false);
+        console.error(e);
+        showErr(`? ???: ${e.message}<br><br>
+            ?? ???? ??:<br>
+            • ????? ????? ???? (Solana mint address)<br>
+            • ????? ???????? ????<br>
+            • ?????? ?????? ??? Solana`);
+    }
+}
+
+/* -------------------------------------------------------
+   RENDER
+   ------------------------------------------------------- */
+function render(mint, ti, hd, pf, dev, cluster, an) {
+    const name   = pf.name   || 'Unknown';
+    const symbol = pf.symbol || '?';
+    const mcap   = an.mcap;
+
+    /* Score card */
+    const cls = an.score >= 70 ? 'safe' : an.score >= 40 ? 'warn' : 'danger';
+    const sc  = document.getElementById('scoreCard');
+    sc.className = `score-card ${cls}`;
+    document.getElementById('scoreName').textContent = `${name} (${symbol})`;
+    document.getElementById('scoreNum').textContent  = `${an.score}%`;
+    document.getElementById('verdict').textContent   =
+        an.score >= 70 ? '? ???? ?????? – ???? ?????? ????'
+      : an.score >= 50 ? '?? ?????? ??????? – ?? ?????'
+      : an.score >= 30 ? '?? ????? ??????? – ??? ????? ???'
+      :                  '?? ????? ???? – ??? ?????? SCAM';
+
+    /* Quick stats */
+    const devCol = devColor(dev.reputation);
+    document.getElementById('statsGrid').innerHTML = `
+        ${stat('?? Market Cap',  '$'+fmt(mcap),          mcap>100000?'#00ff88':mcap>10000?'#ffc800':'#ff4444')}
+        ${stat('?? ????????',    hd.holderCount,          '#00aaff')}
+        ${stat('?? Mint Auth',   ti.isRenounced?'??? ?':'??? ??', ti.isRenounced?'#00ff88':'#ff4444')}
+        ${stat('?? Top 10',      hd.top10Percent.toFixed(1)+'%', hd.top10Percent>50?'#ff4444':hd.top10Percent>25?'#ffc800':'#00ff88')}
+        ${stat('??? Platform',   pf.isPumpFun?'Pump.Fun':'Unknown', pf.isPumpFun?'#ffc800':'#888')}
+        ${stat('????? ??????',   devLabel(dev.reputation), devCol)}
+    `;
+
+    /* Info grid */
+    const isMC = v => v ? '<span class="val g">? ???</span>' : '<span class="val r">? ???</span>';
+    document.getElementById('infoGrid').innerHTML = `
+    <div class="card">
+        <h3>?? ??????? ??????</h3>
+        ${row('?????',         `<span class="val w">${name}</span>`)}
+        ${row('?????',         `<span class="val b">${symbol}</span>`)}
+        ${row('Total Supply',  `<span class="val w">${fmt(ti.uiSupply)}</span>`)}
+        ${row('?????',         `<span class="val g">$${ti.price>0?ti.price.toExponential(4):'–'}</span>`)}
+        ${row('Decimals',      `<span class="val w">${ti.decimals}</span>`)}
+        ${row('Bonding Curve', pf.isPumpFun
+            ? (pf.complete
+                ? '<span class="val g">?????? ?</span>'
+                : '<span class="val y">??? ?????? ?</span>')
+            : '<span class="val" style="color:#555">N/A</span>')}
+        ${row('Raydium Pool',  pf.raydiumPool
+            ? '<span class="val g">????? ?</span>'
+            : '<span class="val y">??? ?????</span>')}
+        ${pf.description ? row('?????',
+            `<span class="val w" style="font-size:.8rem;direction:ltr;word-break:break-all">
+             ${pf.description.slice(0,180)}</span>`) : ''}
+    </div>
+    <div class="card">
+        <h3>??? ?????? ??????</h3>
+        ${row('Mint Authority',   isMC(ti.isRenounced))}
+        ${row('Freeze Authority', isMC(!ti.freezeAuthority))}
+        ${row('?????? ?????',    cluster.found
+            ? `<span class="val r">? ${cluster.totalPct.toFixed(1)}%</span>`
+            : '<span class="val g">? ????</span>')}
+        ${row('???? ??????',      `<span class="val" style="color:${devCol}">${devLabel(dev.reputation)}</span>`)}
+        ${row('????? ??????',     `<span class="val w">${dev.totalTokens}</span>`)}
+        ${row('???? ?????? (SOL)',`<span class="val b">${dev.solBalance.toFixed(3)}</span>`)}
+        ${row('?????? ?????',
+            [pf.twitter?'??':null, pf.telegram?'TG':null, pf.website?'??':null]
+            .filter(Boolean).length
+            ? `<span class="val g">${[pf.twitter?'??':'',pf.telegram?'TG':'',pf.website?'??':''].filter(Boolean).join(' ')} ?</span>`
+            : '<span class="val r">? ?? ????</span>')}
+    </div>`;
+
+    /* Holders */
+    let hHtml = `
+    <div class="card">
+        <h3>?? ???? ????????</h3>
+        ${row('???? 5', `<span class="val ${hd.top5Percent>30?'r':hd.top5Percent>15?'y':'g'}">${hd.top5Percent.toFixed(1)}%</span>`)}
+        <div class="prog"><div class="prog-fill ${hd.top5Percent>30?'':''}"
+             style="width:${Math.min(hd.top5Percent,100)}%;
+                    background:${hd.top5Percent>30?'#ff4444':hd.top5Percent>15?'#ffc800':'#00ff88'}"></div></div>
+        ${row('???? 10', `<span class="val ${hd.top10Percent>50?'r':hd.top10Percent>25?'y':'g'}">${hd.top10Percent.toFixed(1)}%</span>`)}
+        <div class="prog"><div class="prog-fill"
+             style="width:${Math.min(hd.top10Percent,100)}%;
+                    background:${hd.top10Percent>50?'#ff4444':hd.top10Percent>25?'#ffc800':'#00ff88'}"></div></div>
+        <table>
+            <thead><tr><th>#</th><th>???????</th><th>??????</th><th>??????</th></tr></thead>
+            <tbody>
+    `;
+    hd.holders.slice(0, 15).forEach((h, i) => {
+        const w   = h.owner || h.address;
+        const pct = h.percent.toFixed(2);
+        const col = h.percent>10?'#ff4444':h.percent>5?'#ffc800':'#00ff88';
+        let note = '';
+        if (pf.bondingCurve && w === pf.bondingCurve) note = '?? Bonding Curve';
+        else if (pf.dev && w === pf.dev)               note = '????? ??????';
+        else if (h.percent > 10)                       note = '?? ??? ????';
+        else if (h.percent > 5)                        note = '?? ???';
+
+        hHtml += `<tr>
+            <td>${i+1}</td>
+            <td>
+                <span class="addr">${shorten(w)}</span>
+                <button class="copy-btn" onclick="cp('${w}')">??</button>
+            </td>
+            <td><b style="color:${col}">${pct}%</b></td>
+            <td style="font-size:.78rem;color:#888">${note}</td>
+        </tr>`;
+    });
+    hHtml += '</tbody></table></div>';
+    document.getElementById('holdersWrap').innerHTML = hHtml;
+
+    /* Cluster */
+    document.getElementById('clusterBox').innerHTML = cluster.found ? `
+    <div class="cluster-box">
+        <h3>?? ????? – ?????? ????? ??????</h3>
+        <p style="color:#ff9999;margin:12px 0;line-height:1.7">
+            ?? ?????? ????? ?????? ???? ?????? ????? ??????
+            <strong style="color:#ff4444">${cluster.totalPct.toFixed(1)}%</strong>.
+            ??? ?? ????? ?????? ??????.
+        </p>
+        <div class="prog"><div class="prog-fill"
+             style="width:${Math.min(cluster.totalPct,100)}%;background:#ff4444"></div></div>
+        <p style="margin-top:10px;font-size:.82rem;color:#666">
+            ????? ???????:
+            <span style="color:${cluster.riskLevel==='high'?'#ff4444':'#ffc800'};font-weight:700">
+            ${cluster.riskLevel==='high'?'?? ????':'?? ?????'}</span>
+        </p>
+    </div>` : '';
+
+    /* Dev */
+    let devHtml = `
+    <div class="card" style="margin-bottom:22px">
+        <h3>????? ????? ??????
+            <span style="font-size:.7em;color:${devCol};margin-right:8px">(${devLabel(dev.reputation)})</span>
+        </h3>
+        ${row('???????', `<span class="addr">${shorten(dev.address||'?')}</span>
+            ${dev.address?`<button class="copy-btn" onclick="cp('${dev.address}')">??</button>`:''}`)}
+        ${row('?????? ???????',    `<span class="val w">${dev.totalTokens}</span>`)}
+        ${row('????? ?????',      `<span class="val g">${dev.successfulTokens} ?</span>`)}
+        ${row('????? Rugged',     `<span class="val r">${dev.ruggedTokens} ?</span>`)}
+        ${row('????? ????',       `<span class="val y">${dev.deadTokens} ??</span>`)}
+        ${row('???? SOL',         `<span class="val b">${dev.solBalance.toFixed(3)}</span>`)}
+    `;
+
+    if (dev.tokens.length) {
+        devHtml += '<div style="margin-top:18px"><b style="color:#666;font-size:.85rem">??? ???????:</b></div>';
+        dev.tokens.slice(0, 10).forEach(t => {
+            const bc = { live:'live', rug:'rug', dead:'dead' }[t.status];
+            const bl = { live:'??? ?', rug:'RUG ??', dead:'???? ??' }[t.status];
+            devHtml += `
+            <div class="dev-item" style="${t.isCurrent?'border:1px solid rgba(0,255,136,.3)':''}">
+                <div style="flex:1">
+                    <div style="font-weight:600;color:${t.isCurrent?'#00ff88':'#ddd'};font-size:.9rem">
+                        ${t.isCurrent?'?? ':''}${t.name} (${t.symbol})
+                    </div>
+                    <div style="font-size:.75rem;color:#555;font-family:monospace;direction:ltr">
+                        ${shorten(t.mint)}
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <div style="font-size:.82rem;color:#00aaff">$${fmt(t.mcap)}</div>
+                    <span class="badge ${bc}">${bl}</span>
+                </div>
+            </div>`;
+        });
+    }
+    devHtml += '</div>';
+    document.getElementById('devBox').innerHTML = devHtml;
+
+    /* Targets */
+    document.getElementById('targetCard').innerHTML = `
+        <h3>?? ??????? ????????</h3>
+        <p style="color:#666;font-size:.85rem;margin-bottom:18px">
+            Market Cap ??????: <strong style="color:#00ff88">$${fmt(mcap)}</strong>
+        </p>
+        <div class="target-grid">
+        ${an.targets.map(t => `
+            <div class="target-item">
+                <div class="mx" style="color:${t.color}">${t.x}</div>
+                <div class="tl">${t.mc}</div>
+                <div class="pb" style="color:${t.color}">?????? ${t.pct}%</div>
+            </div>`).join('')}
+        </div>`;
+
+    /* Risk analysis */
+    document.getElementById('riskCard').innerHTML = `
+        <h3>?? ????? ???????</h3>
+        ${an.pros.map(p => `<div class="risk-item ok">? ${p}</div>`).join('')}
+        ${an.risks.map(r => `<div class="risk-item bad">? ${r}</div>`).join('')}
+    `;
+
+    /* Links */
+    document.getElementById('linksCard').innerHTML = `
+        <h3>?? ????? ?????</h3>
+        <div class="links-row">
+            <a href="https://pump.fun/${mint}"                              target="_blank" class="link-btn lb-g">?? Pump.Fun</a>
+            <a href="https://solscan.io/token/${mint}"                      target="_blank" class="link-btn lb-b">?? Solscan</a>
+            <a href="https://birdeye.so/token/${mint}?chain=solana"         target="_blank" class="link-btn lb-y">?? Birdeye</a>
+            <a href="https://dexscreener.com/solana/${mint}"                target="_blank" class="link-btn lb-b">?? DexScreener</a>
+            <a href="https://rugcheck.xyz/tokens/${mint}"                   target="_blank" class="link-btn lb-g">??? RugCheck</a>
+            ${pf.twitter  ? `<a href="https://twitter.com/${pf.twitter}"    target="_blank" class="link-btn lb-y">?? Twitter</a>`   : ''}
+            ${pf.telegram ? `<a href="https://t.me/${pf.telegram}"          target="_blank" class="link-btn lb-b">?? Telegram</a>`  : ''}
+            ${pf.website  ? `<a href="${pf.website}"                        target="_blank" class="link-btn lb-g">?? Website</a>`   : ''}
+        </div>`;
+
+    document.getElementById('results').classList.add('active');
+    document.getElementById('results').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+/* -------------------------------------------------------
+   HELPERS
+   ------------------------------------------------------- */
+const fmt = n => {
+    if (!n || n===0) return '0';
+    if (n>=1e9) return (n/1e9).toFixed(2)+'B';
+    if (n>=1e6) return (n/1e6).toFixed(2)+'M';
+    if (n>=1e3) return (n/1e3).toFixed(2)+'K';
+    return Number(n).toFixed(2);
+};
+
+const shorten = a => a && a.length>10 ? a.slice(0,6)+'…'+a.slice(-4) : (a||'N/A');
+
+const row = (label, val) =>
+    `<div class="row"><span class="lbl">${label}</span>${val}</div>`;
+
+const stat = (lbl, val, color='#fff') =>
+    `<div class="stat-card">
+        <div class="stat-lbl">${lbl}</div>
+        <div class="stat-val" style="color:${color}">${val}</div>
+     </div>`;
+
+const devColor = r => ({
+    scammer:'#ff4444', suspicious:'#ff6600',
+    trusted:'#00ff88', new:'#ffc800', neutral:'#888'
+})[r] || '#888';
+
+const devLabel = r => ({
+    scammer:'?? ???? ?????', suspicious:'?? ?????',
+    trusted:'? ?????',       new:'?? ????',
+    neutral:'? ?????',       unknown:'? ??? ?????'
+})[r] || '?';
+
+const cp = async t => {
+    try { await navigator.clipboard.writeText(t); } catch {}
+};
+
+/* UI */
+const showLoad = v => document.getElementById('loader').classList[v?'add':'remove']('active');
+const hideRes  = ()  => document.getElementById('results').classList.remove('active');
+const setTxt   = t   => document.getElementById('loadTxt').textContent = t;
+const setScanBtn = d => {
+    const b = document.getElementById('scanBtn');
+    b.disabled = d;
+    b.innerHTML = d ? '<span>?</span><span>???? ?????…</span>'
+                    : '<span>??</span><span>???? ?????</span>';
+};
+const showErr = msg => {
+    const e = document.getElementById('errBox');
+    e.innerHTML = msg; e.classList.add('active');
+};
+const hideErr = () => document.getElementById('errBox').classList.remove('active');
+
+/* Enter key */
+document.getElementById('tokenAddress').addEventListener('keydown', e => {
+    if (e.key === 'Enter') startScan();
+});
+
+/* Auto-paste on focus */
+document.getElementById('tokenAddress').addEventListener('focus', async function() {
+    if (this.value) return;
+    try {
+        const t = await navigator.clipboard.readText();
+        if (/^[A-Za-z0-9]{32,44}$/.test(t)) {
+            this.value = t;
+            this.style.borderColor = '#00ff88';
+            setTimeout(() => this.style.borderColor = '', 1200);
+        }
+    } catch {}
+});
+
+/* Init */
+detectRPC();
+</script>
+</body>
+</html>
