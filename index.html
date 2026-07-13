@@ -173,3 +173,511 @@ border-radius:18px;padding:28px;margin-bottom:22px;text-align:center;
 .ti .mx{font-size:1.9rem;font-weight:900}
 .ti .tl{font-size:.78rem;color:#666;margin:4px 0}
 .ti .pb{font-size:.82rem;font-weight:700}
+.dvi{
+display:flex;align-items:center;gap:12px;
+padding:11px;background:rgba(0,0,0,.2);
+border-radius:11px;margin:7px 0;
+}
+.bdg{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;white-space:nowrap}
+.bdg.rg{background:rgba(255,50,50,.2);color:#ff4444}
+.bdg.lv{background:rgba(0,255,136,.2);color:#00ff88}
+.bdg.dd{background:rgba(255,200,0,.2);color:#ffc800}
+.clbx{
+background:rgba(255,50,50,.06);
+border:2px solid rgba(255,50,50,.3);
+border-radius:18px;padding:24px;margin-bottom:22px;
+}
+.clbx h3{color:#ff4444;margin-bottom:12px}
+.lrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.lbtn{
+padding:8px 18px;border-radius:9px;
+text-decoration:none;font-size:.82rem;
+font-weight:700;font-family:'Cairo',sans-serif;
+transition:filter .2s,transform .2s;
+display:flex;align-items:center;gap:5px;
+}
+.lbtn:hover{filter:brightness(1.25);transform:translateY(-2px)}
+.lg{background:rgba(0,255,136,.12);color:#00ff88;border:1px solid rgba(0,255,136,.25)}
+.lbb{background:rgba(0,170,255,.12);color:#00aaff;border:1px solid rgba(0,170,255,.25)}
+.ly{background:rgba(255,200,0,.12);color:#ffc800;border:1px solid rgba(255,200,0,.25)}
+.cpb{
+background:none;border:1px solid rgba(0,170,255,.3);
+color:#00aaff;padding:2px 8px;border-radius:6px;
+cursor:pointer;font-size:.72rem;font-family:'Cairo',sans-serif;
+}
+.cpb:hover{background:rgba(0,170,255,.15)}
+.disc{
+background:rgba(255,200,0,.04);
+border:1px solid rgba(255,200,0,.18);
+border-radius:12px;padding:16px 20px;
+text-align:center;color:#8a7000;font-size:.8rem;margin-top:28px;
+}
+@media(max-width:600px){
+.hdr h1{font-size:1.4rem}
+.igrid{grid-template-columns:1fr}
+.sno{font-size:3.5rem}
+}
+</style>
+</head>
+<body>
+<div class="ctn">
+<div class="hdr">
+<h1>Pump.Fun Token Scanner</h1>
+<p>Smart Contract Analyzer - Token &amp; Dev Scanner</p>
+</div>
+<div class="sbox">
+<div class="srow">
+<input class="sinp" id="ta" placeholder="Paste token address here... (Solana mint address)" spellcheck="false" autocomplete="off">
+<button class="sbtn" id="sb" onclick="startScan()">
+<span>&#128270;</span><span>SCAN</span>
+</button>
+</div>
+<div class="rpcst" id="rs"><span><span class="rdot chk" id="d1"></span>Checking RPC...</span></div>
+</div>
+<div class="ldr" id="ldr"><div class="spn"></div><p id="lt">Scanning...</p></div>
+<div class="ebox" id="eb"></div>
+<div class="res" id="res">
+<div class="scrd" id="sc"><div class="snm" id="sn"></div><div class="sno" id="so"></div><div class="vrd" id="vd"></div></div>
+<div class="sgrid" id="sg"></div>
+<div class="igrid" id="ig"></div>
+<div class="hwrap" id="hw"></div>
+<div id="cb"></div>
+<div id="db"></div>
+<div class="tcrd" id="tc"></div>
+<div class="crd" id="rc" style="margin-bottom:22px"></div>
+<div class="crd" id="lc" style="margin-bottom:22px"></div>
+<div class="disc">
+Warning: This analysis is for educational purposes only, not financial advice. Always DYOR before any investment.
+</div>
+</div>
+</div>
+<script>
+var RPC_POOL=[
+'https://rpc.ankr.com/solana',
+'https://solana-api.projectserum.com',
+'https://solana-mainnet.g.alchemy.com/v2/demo',
+'https://api.mainnet-beta.solana.com'
+];
+var activeRPC=null;
+
+async function detectRPC(){
+var el=document.getElementById('rs');
+for(var i=0;i<RPC_POOL.length;i++){
+try{
+var r=await fetchRPC(RPC_POOL[i],'getHealth',[],4000);
+if(r&&!r.error){
+activeRPC=RPC_POOL[i];
+var s=RPC_POOL[i].replace('https://','').split('/')[0];
+el.innerHTML='<span><span class="rdot ok"></span>RPC Connected: <b>'+s+'</b></span>';
+return;
+}
+}catch(e){}
+}
+el.innerHTML='<span><span class="rdot bad"></span>Warning: No RPC found - will try all endpoints during scan</span>';
+}
+
+async function fetchRPC(url,method,params,timeout){
+timeout=timeout||10000;
+var ctrl=new AbortController();
+var tid=setTimeout(function(){ctrl.abort()},timeout);
+try{
+var r=await fetch(url,{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({jsonrpc:'2.0',id:1,method:method,params:params}),
+signal:ctrl.signal
+});
+clearTimeout(tid);
+return await r.json();
+}catch(e){
+clearTimeout(tid);
+throw e;
+}
+}
+
+async function rpc(method,params){
+var urls=activeRPC?[activeRPC].concat(RPC_POOL.filter(function(u){return u!==activeRPC})):RPC_POOL;
+for(var i=0;i<urls.length;i++){
+try{
+var r=await fetchRPC(urls[i],method,params);
+if(r&&!r.error){activeRPC=urls[i];return r;}
+}catch(e){}
+}
+throw new Error('All RPC endpoints failed ('+method+')');
+}
+
+async function getTokenInfo(mint){
+var decimals=6,totalSupply=0,uiSupply=0;
+var mintAuth=null,freezeAuth=null;
+try{
+var sr=await rpc('getTokenSupply',[mint]);
+var sv=sr&&sr.result&&sr.result.value;
+if(sv){decimals=sv.decimals;totalSupply=sv.amount;uiSupply=sv.uiAmount||0;}
+}catch(e){}
+try{
+var ar=await rpc('getAccountInfo',[mint,{encoding:'jsonParsed'}]);
+var info=ar&&ar.result&&ar.result.value&&ar.result.value.data&&ar.result.value.data.parsed&&ar.result.value.data.parsed.info;
+if(info){mintAuth=info.mintAuthority||null;freezeAuth=info.freezeAuthority||null;if(!decimals)decimals=info.decimals||6;}
+}catch(e){}
+var price=0,marketCap=0;
+try{
+var pr=await fetch('https://api.jup.ag/price/v2?ids='+mint,{headers:{'Accept':'application/json'}});
+if(pr.ok){var pd=await pr.json();if(pd&&pd.data&&pd.data[mint]){price=parseFloat(pd.data[mint].price)||0;marketCap=price*uiSupply;}}
+}catch(e){}
+return{decimals:decimals,totalSupply:totalSupply,uiSupply:uiSupply,price:price,marketCap:marketCap,mintAuthority:mintAuth,freezeAuthority:freezeAuth,isRenounced:!mintAuth};
+}
+
+async function getTopHolders(mint,uiSupply){
+var holders=[];
+try{
+var r=await rpc('getTokenLargestAccounts',[mint]);
+var raw=r&&r.result&&r.result.value||[];
+for(var i=0;i<raw.length;i++){
+var a=raw[i];
+holders.push({address:a.address,amount:parseFloat(a.uiAmount||0),percent:uiSupply>0?parseFloat(a.uiAmount||0)/uiSupply*100:0,owner:null});
+}
+}catch(e){}
+var promises=[];
+for(var j=0;j<Math.min(holders.length,10);j++){
+(function(idx){
+promises.push(
+rpc('getAccountInfo',[holders[idx].address,{encoding:'jsonParsed'}]).then(function(r2){
+var owner=r2&&r2.result&&r2.result.value&&r2.result.value.data&&r2.result.value.data.parsed&&r2.result.value.data.parsed.info&&r2.result.value.data.parsed.info.owner;
+if(owner)holders[idx].owner=owner;
+}).catch(function(){})
+);
+})(j);
+}
+await Promise.allSettled(promises);
+return{
+holders:holders,
+top5Percent:holders.slice(0,5).reduce(function(s,h){return s+h.percent},0),
+top10Percent:holders.slice(0,10).reduce(function(s,h){return s+h.percent},0),
+holderCount:holders.length
+};
+}
+
+async function getPumpData(mint){
+var def={isPumpFun:false,dev:null,devSolBalance:0,bondingCurve:null,complete:false,raydiumPool:null,name:'',symbol:'',description:'',twitter:'',telegram:'',website:'',marketCap:0,createdAt:null};
+var urls=[
+'https://frontend-api.pump.fun/coins/'+mint,
+'https://api.allorigins.win/raw?url='+encodeURIComponent('https://frontend-api.pump.fun/coins/'+mint),
+'https://corsproxy.io/?'+encodeURIComponent('https://frontend-api.pump.fun/coins/'+mint)
+];
+for(var i=0;i<urls.length;i++){
+try{
+var r=await fetch(urls[i],{signal:AbortSignal.timeout(7000)});
+if(!r.ok)continue;
+var d=await r.json();
+if(!d||!d.mint)continue;
+def.isPumpFun=true;
+def.dev=d.creator||null;
+def.bondingCurve=d.bonding_curve||null;
+def.complete=d.complete||false;
+def.raydiumPool=d.raydium_pool||null;
+def.name=d.name||'';
+def.symbol=d.symbol||'';
+def.description=d.description||'';
+def.twitter=d.twitter||'';
+def.telegram=d.telegram||'';
+def.website=d.website||'';
+def.marketCap=d.usd_market_cap||0;
+def.createdAt=d.created_timestamp||null;
+break;
+}catch(e){}
+}
+if(def.dev){
+try{var br=await rpc('getBalance',[def.dev]);def.devSolBalance=(br&&br.result&&br.result.value||0)/1e9;}catch(e){}
+}
+return def;
+}
+
+async function getDevAnalysis(pumpData,currentMint){
+var out={address:pumpData.dev||null,totalTokens:0,ruggedTokens:0,successfulTokens:0,deadTokens:0,tokens:[],reputation:'unknown',solBalance:pumpData.devSolBalance||0};
+if(!pumpData.dev)return out;
+var urls=[
+'https://frontend-api.pump.fun/coins/user-created-coins/'+pumpData.dev+'?offset=0&limit=50&includeNsfw=true',
+'https://api.allorigins.win/raw?url='+encodeURIComponent('https://frontend-api.pump.fun/coins/user-created-coins/'+pumpData.dev+'?offset=0&limit=50&includeNsfw=true')
+];
+var tokens=[];
+for(var i=0;i<urls.length;i++){
+try{
+var r=await fetch(urls[i],{signal:AbortSignal.timeout(8000)});
+if(!r.ok)continue;
+tokens=await r.json();
+if(Array.isArray(tokens))break;
+tokens=[];
+}catch(e){}
+}
+out.totalTokens=tokens.length;
+for(var j=0;j<Math.min(tokens.length,30);j++){
+var t=tokens[j];
+var mcap=t.usd_market_cap||0;
+var status;
+if(t.complete&&t.raydium_pool&&mcap>40000){status='live';out.successfulTokens++;}
+else if(!t.complete&&mcap<800){status='rug';out.ruggedTokens++;}
+else{status='dead';out.deadTokens++;}
+out.tokens.push({name:t.name||'No Name',symbol:t.symbol||'--',mint:t.mint,mcap:mcap,status:status,isCurrent:t.mint===currentMint});
+}
+var rugPct=out.totalTokens>0?out.ruggedTokens/out.totalTokens:0;
+if(out.totalTokens<=1)out.reputation='new';
+else if(rugPct>0.6)out.reputation='scammer';
+else if(rugPct>0.3)out.reputation='suspicious';
+else if(out.successfulTokens>=2)out.reputation='trusted';
+else out.reputation='neutral';
+return out;
+}
+
+function analyzeCluster(holders){
+var out={found:false,totalPct:0,riskLevel:'low',groups:[]};
+var hs=holders.filter(function(h){return h.percent>=0.5&&h.percent<25});
+if(hs.length<4)return out;
+var used={};
+for(var i=0;i<hs.length;i++){
+if(used[i])continue;
+var grp=[i];
+for(var j=i+1;j<hs.length;j++){
+if(used[j])continue;
+var ratio=hs[i].amount>0?hs[j].amount/hs[i].amount:0;
+if(ratio>0.72&&ratio<1.28){grp.push(j);used[j]=true;}
+}
+if(grp.length>=3){
+var pct=0;for(var k=0;k<grp.length;k++)pct+=hs[grp[k]].percent;
+out.groups.push({count:grp.length,pct:pct});
+out.totalPct+=pct;
+out.found=true;
+}
+used[i]=true;
+}
+if(out.totalPct>30)out.riskLevel='high';
+else if(out.totalPct>15)out.riskLevel='medium';
+return out;
+}
+
+function calcScore(ti,hd,pf,dev,cl){
+var score=100;
+var risks=[],pros=[];
+if(ti.mintAuthority){score-=25;risks.push('Mint Authority NOT renounced - can mint new tokens');}
+else pros.push('Mint Authority renounced');
+if(ti.freezeAuthority){score-=20;risks.push('Freeze Authority exists - can freeze wallets');}
+else pros.push('No Freeze Authority');
+var t10=hd.top10Percent;
+if(t10>50){score-=20;risks.push('Top 10 hold '+t10.toFixed(1)+'% - very high concentration');}
+else if(t10>30){score-=10;risks.push('Top 10 hold '+t10.toFixed(1)+'% - medium concentration');}
+else pros.push('Good distribution - Top 10 hold '+t10.toFixed(1)+'%');
+var top1=hd.holders[0];
+if(top1&&top1.percent>20){score-=15;risks.push('Single wallet holds '+top1.percent.toFixed(1)+'% - dump risk');}
+if(cl.found){var d=cl.riskLevel==='high'?20:10;score-=d;risks.push('Suspicious cluster detected: '+cl.totalPct.toFixed(1)+'%');}
+else pros.push('No suspicious clusters detected');
+if(dev.reputation==='scammer'){score-=30;risks.push('Dev is likely SCAMMER! '+dev.ruggedTokens+'/'+dev.totalTokens+' rugged');}
+else if(dev.reputation==='suspicious'){score-=15;risks.push('Dev is suspicious - high rug ratio');}
+else if(dev.reputation==='trusted'){score+=5;pros.push('Dev is trusted - '+dev.successfulTokens+' successful tokens');}
+else if(dev.reputation==='new'){score-=5;risks.push('Dev is new - no history');}
+if(pf.isPumpFun){
+pros.push('Token is on Pump.Fun');
+if(pf.complete){score+=5;pros.push('Bonding Curve completed');}
+else{score-=5;risks.push('Bonding Curve not completed yet');}
+if(pf.raydiumPool){score+=5;pros.push('Raydium Pool exists');}
+if(!pf.twitter&&!pf.telegram&&!pf.website){score-=5;risks.push('No social media links');}
+else{
+if(pf.twitter)pros.push('Twitter account exists');
+if(pf.telegram)pros.push('Telegram exists');
+if(pf.website)pros.push('Website exists');
+}
+}
+score=Math.max(0,Math.min(100,Math.round(score)));
+var mcap=pf.marketCap||ti.marketCap||0;
+return{score:score,risks:risks,pros:pros,mcap:mcap,targets:calcTargets(mcap,score)};
+}
+
+function calcTargets(mcap,score){
+var f=score/100;
+var out=[];
+var items=[
+{x:'2x',m:2,base:28,boost:35},
+{x:'5x',m:5,base:14,boost:25},
+{x:'10x',m:10,base:7,boost:18},
+{x:'50x',m:50,base:2,boost:10},
+{x:'100x',m:100,base:1,boost:6}
+];
+for(var i=0;i<items.length;i++){
+var it=items[i];
+var pct=Math.min(it.base+it.boost*f,75);
+out.push({
+x:it.x,
+mc:'$'+fmt(mcap*it.m),
+pct:pct.toFixed(0),
+color:pct>40?'#00ff88':pct>20?'#ffc800':'#ff4444'
+});
+}
+return out;
+}
+
+async function startScan(){
+var mint=document.getElementById('ta').value.trim();
+if(!mint){showErr('Please enter token address first');return;}
+if(!/^[A-Za-z0-9]{32,44}$/.test(mint)){showErr('Invalid token address - must be 32-44 characters');return;}
+hideErr();hideRes();showLoad(true);setBtnD(true);
+try{
+setTxt('Getting token info...');
+var ti=await getTokenInfo(mint);
+setTxt('Analyzing holders...');
+var hd=await getTopHolders(mint,ti.uiSupply);
+setTxt('Checking Pump.Fun...');
+var pf=await getPumpData(mint);
+setTxt('Analyzing developer...');
+var dev=await getDevAnalysis(pf,mint);
+setTxt('Scanning clusters...');
+var cl=analyzeCluster(hd.holders);
+setTxt('Calculating safety score...');
+var an=calcScore(ti,hd,pf,dev,cl);
+showLoad(false);setBtnD(false);
+render(mint,ti,hd,pf,dev,cl,an);
+}catch(e){
+showLoad(false);setBtnD(false);
+console.error(e);
+showErr('Error: '+e.message+'<br><br>Make sure:<br>- Token address is correct<br>- Internet connection is active<br>- Token exists on Solana');
+}
+}
+
+function render(mint,ti,hd,pf,dev,cl,an){
+var name=pf.name||'Unknown Token';
+var symbol=pf.symbol||'--';
+var mcap=an.mcap;
+var cls=an.score>=70?'sf':an.score>=40?'wn':'dg';
+var sc=document.getElementById('sc');
+sc.className='scrd '+cls;
+document.getElementById('sn').textContent=name+' ('+symbol+')';
+document.getElementById('so').textContent=an.score+'%';
+var vt;
+if(an.score>=70)vt='SAFE - Low Risk Entry';
+else if(an.score>=50)vt='MEDIUM RISK - Be Careful';
+else if(an.score>=30)vt='HIGH RISK - Not Recommended';
+else vt='VERY DANGEROUS - Likely SCAM';
+document.getElementById('vd').textContent=vt;
+var dc=devColor(dev.reputation);
+document.getElementById('sg').innerHTML=
+stc('Market Cap','$'+fmt(mcap),mcap>100000?'#00ff88':mcap>10000?'#ffc800':'#ff4444')+
+stc('Holders',hd.holderCount,'#00aaff')+
+stc('Mint Auth',ti.isRenounced?'Safe':'DANGER',ti.isRenounced?'#00ff88':'#ff4444')+
+stc('Top 10',hd.top10Percent.toFixed(1)+'%',hd.top10Percent>50?'#ff4444':hd.top10Percent>25?'#ffc800':'#00ff88')+
+stc('Platform',pf.isPumpFun?'Pump.Fun':'Unknown',pf.isPumpFun?'#ffc800':'#888')+
+stc('Developer',devLabel(dev.reputation),dc);
+var chk=function(v){return v?'<span class="vl g">Safe</span>':'<span class="vl r">DANGER</span>';};
+document.getElementById('ig').innerHTML=
+'<div class="crd"><h3>Token Info</h3>'+
+rw('Name','<span class="vl w">'+name+'</span>')+
+rw('Symbol','<span class="vl b">'+symbol+'</span>')+
+rw('Total Supply','<span class="vl w">'+fmt(ti.uiSupply)+'</span>')+
+rw('Price','<span class="vl g">$'+(ti.price>0?ti.price.toExponential(4):'--')+'</span>')+
+rw('Decimals','<span class="vl w">'+ti.decimals+'</span>')+
+rw('Bonding Curve',pf.isPumpFun?(pf.complete?'<span class="vl g">Completed</span>':'<span class="vl y">Not Complete</span>'):'<span class="vl" style="color:#555">N/A</span>')+
+rw('Raydium Pool',pf.raydiumPool?'<span class="vl g">Exists</span>':'<span class="vl y">Not Found</span>')+
+(pf.description?rw('Description','<span class="vl w" style="font-size:.8rem;direction:ltr;word-break:break-all">'+pf.description.slice(0,180)+'</span>'):'')+
+'</div>'+
+'<div class="crd"><h3>Security Checks</h3>'+
+rw('Mint Authority',chk(ti.isRenounced))+
+rw('Freeze Authority',chk(!ti.freezeAuthority))+
+rw('Cluster',cl.found?'<span class="vl r">FOUND '+cl.totalPct.toFixed(1)+'%</span>':'<span class="vl g">Clean</span>')+
+rw('Dev Reputation','<span class="vl" style="color:'+dc+'">'+devLabel(dev.reputation)+'</span>')+
+rw('Dev Tokens','<span class="vl w">'+dev.totalTokens+'</span>')+
+rw('Dev SOL','<span class="vl b">'+dev.solBalance.toFixed(3)+'</span>')+
+rw('Social Media',(pf.twitter||pf.telegram||pf.website)?'<span class="vl g">'+(pf.twitter?'X ':'')+(pf.telegram?'TG ':'')+(pf.website?'Web':'')+'</span>':'<span class="vl r">None</span>')+
+'</div>';
+var hh='<div class="crd"><h3>Top Holders</h3>'+
+rw('Top 5','<span class="vl '+(hd.top5Percent>30?'r':hd.top5Percent>15?'y':'g')+'">'+hd.top5Percent.toFixed(1)+'%</span>')+
+'<div class="prg"><div class="pf" style="width:'+Math.min(hd.top5Percent,100)+'%;background:'+(hd.top5Percent>30?'#ff4444':hd.top5Percent>15?'#ffc800':'#00ff88')+'"></div></div>'+
+rw('Top 10','<span class="vl '+(hd.top10Percent>50?'r':hd.top10Percent>25?'y':'g')+'">'+hd.top10Percent.toFixed(1)+'%</span>')+
+'<div class="prg"><div class="pf" style="width:'+Math.min(hd.top10Percent,100)+'%;background:'+(hd.top10Percent>50?'#ff4444':hd.top10Percent>25?'#ffc800':'#00ff88')+'"></div></div>'+
+'<table><thead><tr><th>#</th><th>Wallet</th><th>%</th><th>Note</th></tr></thead><tbody>';
+for(var i=0;i<Math.min(hd.holders.length,15);i++){
+var h=hd.holders[i];
+var wa=h.owner||h.address;
+var pct=h.percent.toFixed(2);
+var col=h.percent>10?'#ff4444':h.percent>5?'#ffc800':'#00ff88';
+var note='';
+if(pf.bondingCurve&&wa===pf.bondingCurve)note='Bonding Curve';
+else if(pf.dev&&wa===pf.dev)note='Developer';
+else if(h.percent>10)note='BIG Whale';
+else if(h.percent>5)note='Whale';
+hh+='<tr><td>'+(i+1)+'</td><td><span class="adr">'+shorten(wa)+'</span> <button class="cpb" onclick="cp(\''+wa+'\')">Copy</button></td><td><b style="color:'+col+'">'+pct+'%</b></td><td style="font-size:.78rem;color:#888">'+note+'</td></tr>';
+}
+hh+='</tbody></table></div>';
+document.getElementById('hw').innerHTML=hh;
+document.getElementById('cb').innerHTML=cl.found?
+'<div class="clbx"><h3>WARNING - Linked Wallet Cluster</h3><p style="color:#ff9999;margin:12px 0;line-height:1.7">Suspicious linked wallets detected holding <strong style="color:#ff4444">'+cl.totalPct.toFixed(1)+'%</strong> together. Possible price manipulation.</p><div class="prg"><div class="pf" style="width:'+Math.min(cl.totalPct,100)+'%;background:#ff4444"></div></div><p style="margin-top:10px;font-size:.82rem;color:#666">Risk Level: <span style="color:'+(cl.riskLevel==='high'?'#ff4444':'#ffc800')+';font-weight:700">'+(cl.riskLevel==='high'?'HIGH':'MEDIUM')+'</span></p></div>':'';
+var dvh='<div class="crd" style="margin-bottom:22px"><h3>Developer Analysis <span style="font-size:.7em;color:'+dc+';margin-right:8px">('+devLabel(dev.reputation)+')</span></h3>'+
+rw('Address','<span class="adr">'+shorten(dev.address||'Unknown')+'</span>'+(dev.address?' <button class="cpb" onclick="cp(\''+dev.address+'\')">Copy</button>':''))+
+rw('Total Tokens','<span class="vl w">'+dev.totalTokens+'</span>')+
+rw('Successful','<span class="vl g">'+dev.successfulTokens+'</span>')+
+rw('Rugged','<span class="vl r">'+dev.ruggedTokens+'</span>')+
+rw('Dead','<span class="vl y">'+dev.deadTokens+'</span>')+
+rw('SOL Balance','<span class="vl b">'+dev.solBalance.toFixed(3)+'</span>');
+if(dev.tokens.length){
+dvh+='<div style="margin-top:18px"><b style="color:#666;font-size:.85rem">Recent Tokens:</b></div>';
+for(var j=0;j<Math.min(dev.tokens.length,10);j++){
+var tk=dev.tokens[j];
+var bc=tk.status==='live'?'lv':tk.status==='rug'?'rg':'dd';
+var bl=tk.status==='live'?'ALIVE':tk.status==='rug'?'RUGGED':'DEAD';
+dvh+='<div class="dvi" style="'+(tk.isCurrent?'border:1px solid rgba(0,255,136,.3)':'')+'"><div style="flex:1"><div style="font-weight:600;color:'+(tk.isCurrent?'#00ff88':'#ddd')+';font-size:.9rem">'+(tk.isCurrent?'>> ':'')+tk.name+' ('+tk.symbol+')</div><div style="font-size:.75rem;color:#555;font-family:monospace;direction:ltr">'+shorten(tk.mint)+'</div></div><div style="text-align:right"><div style="font-size:.82rem;color:#00aaff">$'+fmt(tk.mcap)+'</div><span class="bdg '+bc+'">'+bl+'</span></div></div>';
+}
+}
+dvh+='</div>';
+document.getElementById('db').innerHTML=dvh;
+var tgt='<h3>Target Analysis</h3><p style="color:#666;font-size:.85rem;margin-bottom:18px">Current MCap: <strong style="color:#00ff88">$'+fmt(mcap)+'</strong></p><div class="tgrid">';
+for(var m=0;m<an.targets.length;m++){
+var tg=an.targets[m];
+tgt+='<div class="ti"><div class="mx" style="color:'+tg.color+'">'+tg.x+'</div><div class="tl">'+tg.mc+'</div><div class="pb" style="color:'+tg.color+'">Prob: '+tg.pct+'%</div></div>';
+}
+tgt+='</div>';
+document.getElementById('tc').innerHTML=tgt;
+var rch='<h3>Risk Analysis</h3>';
+for(var p=0;p<an.pros.length;p++)rch+='<div class="ri ok">'+an.pros[p]+'</div>';
+for(var q=0;q<an.risks.length;q++)rch+='<div class="ri bd">'+an.risks[q]+'</div>';
+document.getElementById('rc').innerHTML=rch;
+document.getElementById('lc').innerHTML=
+'<h3>Useful Links</h3><div class="lrow">'+
+'<a href="https://pump.fun/'+mint+'" target="_blank" class="lbtn lg">Pump.Fun</a>'+
+'<a href="https://solscan.io/token/'+mint+'" target="_blank" class="lbtn lbb">Solscan</a>'+
+'<a href="https://birdeye.so/token/'+mint+'?chain=solana" target="_blank" class="lbtn ly">Birdeye</a>'+
+'<a href="https://dexscreener.com/solana/'+mint+'" target="_blank" class="lbtn lbb">DexScreener</a>'+
+'<a href="https://rugcheck.xyz/tokens/'+mint+'" target="_blank" class="lbtn lg">RugCheck</a>'+
+(pf.twitter?'<a href="https://twitter.com/'+pf.twitter+'" target="_blank" class="lbtn ly">Twitter</a>':'')+
+(pf.telegram?'<a href="https://t.me/'+pf.telegram+'" target="_blank" class="lbtn lbb">Telegram</a>':'')+
+(pf.website?'<a href="'+pf.website+'" target="_blank" class="lbtn lg">Website</a>':'')+
+'</div>';
+document.getElementById('res').classList.add('on');
+document.getElementById('res').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function fmt(n){
+if(!n||n===0)return '0';
+if(n>=1e9)return(n/1e9).toFixed(2)+'B';
+if(n>=1e6)return(n/1e6).toFixed(2)+'M';
+if(n>=1e3)return(n/1e3).toFixed(2)+'K';
+return Number(n).toFixed(2);
+}
+function shorten(a){return a&&a.length>10?a.slice(0,6)+'...'+a.slice(-4):(a||'N/A');}
+function rw(l,v){return '<div class="rw"><span class="lb">'+l+'</span>'+v+'</div>';}
+function stc(l,v,c){return '<div class="stcd"><div class="stl">'+l+'</div><div class="stv" style="color:'+c+'">'+v+'</div></div>';}
+function devColor(r){return{scammer:'#ff4444',suspicious:'#ff6600',trusted:'#00ff88','new':'#ffc800',neutral:'#888'}[r]||'#888';}
+function devLabel(r){return{scammer:'SCAMMER',suspicious:'Suspicious',trusted:'Trusted','new':'New Dev',neutral:'Neutral',unknown:'Unknown'}[r]||'Unknown';}
+function cp(t){try{navigator.clipboard.writeText(t)}catch(e){}}
+function showLoad(v){document.getElementById('ldr').classList[v?'add':'remove']('on')}
+function hideRes(){document.getElementById('res').classList.remove('on')}
+function setTxt(t){document.getElementById('lt').textContent=t}
+function setBtnD(d){var b=document.getElementById('sb');b.disabled=d;b.innerHTML=d?'<span>...</span><span>Scanning</span>':'<span>&#128270;</span><span>SCAN</span>';}
+function showErr(m){var e=document.getElementById('eb');e.innerHTML=m;e.classList.add('on')}
+function hideErr(){document.getElementById('eb').classList.remove('on')}
+
+document.getElementById('ta').addEventListener('keydown',function(e){if(e.key==='Enter')startScan()});
+
+document.getElementById('ta').addEventListener('focus',async function(){
+if(this.value)return;
+try{var t=await navigator.clipboard.readText();if(/^[A-Za-z0-9]{32,44}$/.test(t)){this.value=t;this.style.borderColor='#00ff88';var self=this;setTimeout(function(){self.style.borderColor=''},1200);}}catch(e){}
+});
+
+detectRPC();
+</script>
+</body>
+</html>
