@@ -1,683 +1,1054 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pump.Fun Token Scanner</title>
+<title>Pro Token Scanner - AI Powered</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{
-font-family:'Cairo',sans-serif;
-background:#060612;
-color:#e0e0e0;
+font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+background:#08090d;
+color:#c8ccd4;
 min-height:100vh;
+line-height:1.6;
 }
+:root{
+--g:#00f593;--r:#ff3b5c;--y:#ffb700;--b:#3b82f6;
+--bg1:#0d1017;--bg2:#141822;--bg3:#1a1f2e;
+--brd:rgba(255,255,255,.06);
+}
+
+/* GRID BACKGROUND */
 body::before{
-content:'';position:fixed;inset:0;
+content:'';position:fixed;inset:0;z-index:-1;
 background:
-radial-gradient(ellipse at 20% 30%,rgba(0,255,136,.06) 0%,transparent 55%),
-radial-gradient(ellipse at 80% 70%,rgba(0,120,255,.06) 0%,transparent 55%);
-z-index:-1;
+linear-gradient(rgba(0,245,147,.03) 1px,transparent 1px),
+linear-gradient(90deg,rgba(0,245,147,.03) 1px,transparent 1px);
+background-size:40px 40px;
 }
-.ctn{max-width:1100px;margin:0 auto;padding:24px 16px}
-.hdr{text-align:center;padding:36px 0 24px}
-.hdr h1{
-font-size:clamp(1.6rem,4vw,2.8rem);font-weight:900;
-background:linear-gradient(135deg,#00ff88,#00c8ff,#ff00aa);
+
+.app{max-width:1200px;margin:0 auto;padding:20px}
+
+/* === HEADER === */
+.hd{text-align:center;padding:40px 0 30px}
+.hd h1{
+font-size:2.2rem;font-weight:800;
+background:linear-gradient(135deg,var(--g),var(--b));
 -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-background-clip:text;
+letter-spacing:-.5px;
 }
-.hdr p{color:#666;margin-top:8px;font-size:.95rem}
-.sbox{
-background:rgba(255,255,255,.03);
-border:1px solid rgba(0,255,136,.18);
-border-radius:18px;padding:28px;margin-bottom:24px;
+.hd .sub{color:#555;margin-top:8px;font-size:.9rem}
+.hd .badges{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+.hd .badge{
+padding:4px 14px;border-radius:20px;font-size:.72rem;font-weight:600;
+border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);
 }
-.srow{display:flex;gap:12px;flex-wrap:wrap}
-.sinp{
-flex:1;min-width:260px;padding:16px 20px;
-background:rgba(0,0,0,.45);
-border:2px solid rgba(0,255,136,.25);
-border-radius:12px;color:#00ff88;
-font-size:.95rem;font-family:'Courier New',monospace;
-outline:none;direction:ltr;
-transition:border .25s,box-shadow .25s;
+
+/* === SEARCH === */
+.search-panel{
+background:var(--bg2);
+border:1px solid var(--brd);
+border-radius:16px;
+padding:24px;
+margin-bottom:24px;
 }
-.sinp:focus{border-color:#00ff88;box-shadow:0 0 18px rgba(0,255,136,.25)}
-.sinp::placeholder{color:#3a3a3a}
-.sbtn{
-padding:16px 36px;
-background:linear-gradient(135deg,#00ff88,#00c060);
-color:#000;border:none;border-radius:12px;
-font-size:1rem;font-weight:700;font-family:'Cairo',sans-serif;
-cursor:pointer;transition:transform .2s,box-shadow .2s;
-display:flex;align-items:center;gap:8px;
+.search-row{display:flex;gap:12px}
+.search-input{
+flex:1;padding:14px 18px;
+background:var(--bg1);
+border:1.5px solid rgba(0,245,147,.15);
+border-radius:12px;
+color:var(--g);
+font-size:.95rem;
+font-family:'SF Mono','Fira Code',monospace;
+outline:none;
+transition:all .3s;
 }
-.sbtn:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,255,136,.35)}
-.sbtn:disabled{background:#333;color:#666;transform:none;box-shadow:none;cursor:not-allowed}
-.rpcst{margin-top:14px;font-size:.8rem;color:#555;display:flex;gap:16px;flex-wrap:wrap}
-.rdot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-left:5px}
-.rdot.ok{background:#00ff88}
-.rdot.bad{background:#ff3232}
-.rdot.chk{background:#ffc800;animation:pls 1s infinite}
-@keyframes pls{0%,100%{opacity:.4}50%{opacity:1}}
-.ldr{display:none;text-align:center;padding:60px 0}
-.ldr.on{display:block}
-.spn{
-width:56px;height:56px;
-border:4px solid rgba(0,255,136,.1);
-border-top-color:#00ff88;border-radius:50%;
-animation:sp 1s linear infinite;
-margin:0 auto 18px;
+.search-input:focus{
+border-color:var(--g);
+box-shadow:0 0 0 3px rgba(0,245,147,.1);
 }
-@keyframes sp{to{transform:rotate(360deg)}}
-.ldr p{color:#00ff88;font-size:1.1rem;animation:pls 2s infinite}
-.ebox{
+.search-input::placeholder{color:#333}
+.scan-btn{
+padding:14px 32px;
+background:var(--g);
+color:#000;
+border:none;
+border-radius:12px;
+font-size:.95rem;
+font-weight:700;
+cursor:pointer;
+transition:all .2s;
+white-space:nowrap;
+}
+.scan-btn:hover{
+transform:translateY(-2px);
+box-shadow:0 6px 24px rgba(0,245,147,.3);
+}
+.scan-btn:disabled{
+background:#222;color:#555;
+transform:none;box-shadow:none;
+cursor:wait;
+}
+
+/* Status bar */
+.status-bar{
+display:flex;gap:12px;margin-top:14px;
+align-items:center;flex-wrap:wrap;
+font-size:.78rem;color:#444;
+}
+.st-dot{
+width:7px;height:7px;border-radius:50%;
+display:inline-block;margin-right:4px;
+}
+.st-dot.on{background:var(--g);box-shadow:0 0 6px var(--g)}
+.st-dot.off{background:var(--r)}
+.st-dot.wait{background:var(--y);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:.3}50%{opacity:1}}
+
+/* === LOADER === */
+.loader{display:none;padding:60px 0;text-align:center}
+.loader.on{display:block}
+.loader-ring{
+width:48px;height:48px;
+border:3px solid var(--bg3);
+border-top-color:var(--g);
+border-radius:50%;
+animation:spin .8s linear infinite;
+margin:0 auto 20px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-txt{color:var(--g);font-size:.95rem}
+.loader-steps{
+margin-top:20px;
+display:flex;flex-direction:column;
+gap:6px;align-items:center;
+}
+.step{
+font-size:.78rem;color:#444;
+display:flex;align-items:center;gap:6px;
+}
+.step.done{color:var(--g)}
+.step.active{color:var(--y)}
+
+/* === ERROR === */
+.err{
 display:none;
-background:rgba(255,50,50,.08);
-border:1px solid rgba(255,50,50,.3);
-border-radius:14px;padding:20px 24px;
-color:#ff6060;margin:16px 0;line-height:1.7;
+background:rgba(255,59,92,.06);
+border:1px solid rgba(255,59,92,.2);
+border-radius:12px;
+padding:18px 22px;
+color:var(--r);
+margin:16px 0;
+font-size:.9rem;
 }
-.ebox.on{display:block}
-.res{display:none}
-.res.on{display:block;animation:fu .45s ease}
-@keyframes fu{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-.scrd{
-border-radius:22px;padding:36px;text-align:center;
-margin-bottom:22px;position:relative;overflow:hidden;border:2px solid;
+.err.on{display:block}
+
+/* === RESULTS === */
+.results{display:none}
+.results.on{display:block;animation:fadeUp .5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* Main Score */
+.main-score{
+background:var(--bg2);
+border:1.5px solid;
+border-radius:20px;
+padding:40px;
+text-align:center;
+margin-bottom:20px;
+position:relative;
+overflow:hidden;
 }
-.scrd::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
-.scrd.sf{border-color:rgba(0,255,136,.4);background:rgba(0,255,136,.04)}
-.scrd.wn{border-color:rgba(255,200,0,.4);background:rgba(255,200,0,.04)}
-.scrd.dg{border-color:rgba(255,50,50,.4);background:rgba(255,50,50,.04)}
-.scrd.sf::before{background:linear-gradient(90deg,#00ff88,#00cc60)}
-.scrd.wn::before{background:linear-gradient(90deg,#ffc800,#ff9900)}
-.scrd.dg::before{background:linear-gradient(90deg,#ff3232,#cc0000)}
-.snm{font-size:1.3rem;color:#aaa;margin-bottom:6px}
-.sno{font-size:5rem;font-weight:900;line-height:1}
-.scrd.sf .sno{color:#00ff88}
-.scrd.wn .sno{color:#ffc800}
-.scrd.dg .sno{color:#ff3232}
-.vrd{
-display:inline-block;margin-top:14px;
-padding:10px 28px;border-radius:50px;
-font-size:1.05rem;font-weight:700;
+.main-score::after{
+content:'';position:absolute;top:0;left:0;right:0;height:3px;
 }
-.scrd.sf .vrd{background:rgba(0,255,136,.12);color:#00ff88;border:1px solid rgba(0,255,136,.3)}
-.scrd.wn .vrd{background:rgba(255,200,0,.12);color:#ffc800;border:1px solid rgba(255,200,0,.3)}
-.scrd.dg .vrd{background:rgba(255,50,50,.12);color:#ff3232;border:1px solid rgba(255,50,50,.3)}
-.sgrid{
+.main-score.safe{border-color:rgba(0,245,147,.3)}
+.main-score.safe::after{background:linear-gradient(90deg,var(--g),#00c9ff)}
+.main-score.warn{border-color:rgba(255,183,0,.3)}
+.main-score.warn::after{background:linear-gradient(90deg,var(--y),#ff8c00)}
+.main-score.danger{border-color:rgba(255,59,92,.3)}
+.main-score.danger::after{background:linear-gradient(90deg,var(--r),#cc0033)}
+
+.token-name{font-size:1.1rem;color:#666;margin-bottom:4px}
+.score-ring{
+width:160px;height:160px;
+margin:20px auto;
+position:relative;
+}
+.score-ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:8;stroke-linecap:round}
+.score-ring .bg{stroke:var(--bg3)}
+.score-ring .fg{transition:stroke-dashoffset 1.5s ease}
+.score-val{
+position:absolute;inset:0;
+display:flex;flex-direction:column;
+align-items:center;justify-content:center;
+}
+.score-val .num{font-size:3rem;font-weight:900;line-height:1}
+.score-val .lbl{font-size:.75rem;color:#666;text-transform:uppercase;letter-spacing:1px}
+.main-score.safe .score-val .num{color:var(--g)}
+.main-score.warn .score-val .num{color:var(--y)}
+.main-score.danger .score-val .num{color:var(--r)}
+.verdict-text{
+display:inline-block;margin-top:16px;
+padding:8px 24px;border-radius:30px;
+font-size:.9rem;font-weight:600;
+}
+.main-score.safe .verdict-text{background:rgba(0,245,147,.08);color:var(--g);border:1px solid rgba(0,245,147,.2)}
+.main-score.warn .verdict-text{background:rgba(255,183,0,.08);color:var(--y);border:1px solid rgba(255,183,0,.2)}
+.main-score.danger .verdict-text{background:rgba(255,59,92,.08);color:var(--r);border:1px solid rgba(255,59,92,.2)}
+
+/* AI verdict */
+.ai-verdict{
+background:linear-gradient(135deg,rgba(59,130,246,.06),rgba(0,245,147,.06));
+border:1px solid rgba(59,130,246,.2);
+border-radius:14px;
+padding:20px 24px;
+margin:20px 0;
+font-size:.88rem;
+line-height:1.7;
+}
+.ai-verdict h4{color:var(--b);margin-bottom:10px;font-size:.95rem;display:flex;align-items:center;gap:8px}
+
+/* Stats Grid */
+.stats{
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(170px,1fr));
-gap:14px;margin-bottom:22px;
+grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+gap:12px;margin:20px 0;
 }
-.stcd{
-background:rgba(255,255,255,.03);
-border:1px solid rgba(255,255,255,.08);
-border-radius:14px;padding:18px;text-align:center;
+.stat{
+background:var(--bg2);
+border:1px solid var(--brd);
+border-radius:12px;
+padding:16px;text-align:center;
+transition:border-color .2s;
 }
-.stv{font-size:1.55rem;font-weight:900;margin:6px 0}
-.stl{font-size:.78rem;color:#666}
-.igrid{
+.stat:hover{border-color:rgba(0,245,147,.2)}
+.stat .v{font-size:1.4rem;font-weight:800;margin:6px 0}
+.stat .l{font-size:.72rem;color:#555;text-transform:uppercase;letter-spacing:.5px}
+
+/* Cards Grid */
+.cards{
 display:grid;
-grid-template-columns:repeat(auto-fill,minmax(340px,1fr));
-gap:18px;margin-bottom:22px;
+grid-template-columns:repeat(auto-fill,minmax(380px,1fr));
+gap:16px;margin:20px 0;
 }
-.crd{
-background:rgba(255,255,255,.025);
-border:1px solid rgba(255,255,255,.08);
-border-radius:18px;padding:24px;
-transition:border .25s,transform .25s;
+.card{
+background:var(--bg2);
+border:1px solid var(--brd);
+border-radius:14px;
+padding:22px;
+transition:all .25s;
 }
-.crd:hover{border-color:rgba(0,255,136,.25);transform:translateY(-4px)}
-.crd h3{
-font-size:1rem;margin-bottom:16px;
-padding-bottom:10px;
-border-bottom:1px solid rgba(255,255,255,.08);
+.card:hover{border-color:rgba(0,245,147,.15);transform:translateY(-2px)}
+.card h3{
+font-size:.9rem;font-weight:700;
+margin-bottom:14px;padding-bottom:10px;
+border-bottom:1px solid var(--brd);
 display:flex;align-items:center;gap:8px;
+color:#fff;
 }
-.rw{
-display:flex;justify-content:space-between;align-items:center;
-padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);
+.card .row{
+display:flex;justify-content:space-between;
+align-items:center;padding:7px 0;
+border-bottom:1px solid rgba(255,255,255,.02);
+font-size:.85rem;
 }
-.rw:last-child{border-bottom:none}
-.lb{color:#666;font-size:.88rem}
-.vl{font-weight:700;font-size:.92rem;direction:ltr}
-.g{color:#00ff88}.r{color:#ff4444}
-.y{color:#ffc800}.b{color:#00aaff}.w{color:#fff}
-.hwrap{margin-bottom:22px}
-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:.84rem}
-thead th{background:rgba(0,255,136,.08);padding:10px 12px;text-align:right;color:#00ff88}
-tbody td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04)}
-tbody tr:hover{background:rgba(0,255,136,.04)}
-.adr{font-family:'Courier New',monospace;color:#00aaff;direction:ltr}
-.prg{height:7px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;margin:6px 0 14px}
-.pf{height:100%;border-radius:6px}
-.ri{
-display:flex;align-items:flex-start;gap:10px;
-padding:11px 14px;border-radius:11px;margin:7px 0;
-font-size:.9rem;line-height:1.5;
+.card .row:last-child{border-bottom:none}
+.card .k{color:#555}
+.card .v2{font-weight:600}
+
+/* Holders Table */
+.htable{
+background:var(--bg2);
+border:1px solid var(--brd);
+border-radius:14px;
+padding:22px;margin:20px 0;
+overflow-x:auto;
 }
-.ri.ok{background:rgba(0,255,136,.08);border:1px solid rgba(0,255,136,.18)}
-.ri.bd{background:rgba(255,50,50,.08);border:1px solid rgba(255,50,50,.18)}
-.tcrd{
-background:linear-gradient(135deg,rgba(0,120,255,.08),rgba(0,255,136,.08));
-border:1px solid rgba(0,120,255,.25);
-border-radius:18px;padding:28px;margin-bottom:22px;text-align:center;
+.htable h3{
+font-size:.9rem;font-weight:700;
+margin-bottom:14px;padding-bottom:10px;
+border-bottom:1px solid var(--brd);
+color:#fff;
 }
-.tcrd h3{color:#00aaff;font-size:1.2rem;margin-bottom:20px}
-.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
-.ti{background:rgba(0,0,0,.3);border-radius:13px;padding:18px 10px}
-.ti .mx{font-size:1.9rem;font-weight:900}
-.ti .tl{font-size:.78rem;color:#666;margin:4px 0}
-.ti .pb{font-size:.82rem;font-weight:700}
-.dvi{
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{
+background:rgba(0,245,147,.05);
+padding:10px;text-align:left;
+color:var(--g);font-weight:600;
+border-bottom:1px solid var(--brd);
+}
+td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,.02)}
+tr:hover{background:rgba(0,245,147,.02)}
+.mono{font-family:'SF Mono','Fira Code',monospace;color:var(--b);font-size:.78rem}
+
+/* Progress */
+.pbar{height:5px;background:var(--bg3);border-radius:4px;overflow:hidden;margin:4px 0 12px}
+.pfill{height:100%;border-radius:4px;transition:width 1s ease}
+
+/* Risk Items */
+.ritem{
+display:flex;align-items:center;gap:10px;
+padding:10px 14px;border-radius:10px;
+margin:6px 0;font-size:.84rem;
+}
+.ritem.ok{background:rgba(0,245,147,.05);border:1px solid rgba(0,245,147,.12)}
+.ritem.bad{background:rgba(255,59,92,.05);border:1px solid rgba(255,59,92,.12)}
+.ritem.mid{background:rgba(255,183,0,.05);border:1px solid rgba(255,183,0,.12)}
+
+/* Target */
+.target-panel{
+background:linear-gradient(135deg,var(--bg2),rgba(59,130,246,.04));
+border:1px solid rgba(59,130,246,.2);
+border-radius:14px;
+padding:24px;margin:20px 0;
+text-align:center;
+}
+.target-panel h3{color:var(--b);margin-bottom:16px;font-size:1rem}
+.tgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.titem{background:var(--bg1);border-radius:10px;padding:14px 8px}
+.titem .tx{font-size:1.6rem;font-weight:900}
+.titem .tmc{font-size:.7rem;color:#555;margin:3px 0}
+.titem .tp{font-size:.78rem;font-weight:600}
+
+/* Dev Panel */
+.dev-panel{
+background:var(--bg2);
+border:1px solid var(--brd);
+border-radius:14px;
+padding:22px;margin:20px 0;
+}
+.dev-panel h3{
+font-size:.9rem;font-weight:700;
+margin-bottom:14px;padding-bottom:10px;
+border-bottom:1px solid var(--brd);color:#fff;
+}
+.dev-token{
 display:flex;align-items:center;gap:12px;
-padding:11px;background:rgba(0,0,0,.2);
-border-radius:11px;margin:7px 0;
+padding:10px;background:var(--bg1);
+border-radius:10px;margin:6px 0;
+font-size:.82rem;
 }
-.bdg{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;white-space:nowrap}
-.bdg.rg{background:rgba(255,50,50,.2);color:#ff4444}
-.bdg.lv{background:rgba(0,255,136,.2);color:#00ff88}
-.bdg.dd{background:rgba(255,200,0,.2);color:#ffc800}
-.clbx{
-background:rgba(255,50,50,.06);
-border:2px solid rgba(255,50,50,.3);
-border-radius:18px;padding:24px;margin-bottom:22px;
+.dtag{
+padding:3px 10px;border-radius:12px;
+font-size:.7rem;font-weight:600;
 }
-.clbx h3{color:#ff4444;margin-bottom:12px}
-.lrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-.lbtn{
-padding:8px 18px;border-radius:9px;
-text-decoration:none;font-size:.82rem;
-font-weight:700;font-family:'Cairo',sans-serif;
-transition:filter .2s,transform .2s;
-display:flex;align-items:center;gap:5px;
+.dtag.rug{background:rgba(255,59,92,.15);color:var(--r)}
+.dtag.live{background:rgba(0,245,147,.15);color:var(--g)}
+.dtag.dead{background:rgba(255,183,0,.15);color:var(--y)}
+
+/* Cluster */
+.cluster-alert{
+background:rgba(255,59,92,.04);
+border:1.5px solid rgba(255,59,92,.25);
+border-radius:14px;
+padding:22px;margin:20px 0;
 }
-.lbtn:hover{filter:brightness(1.25);transform:translateY(-2px)}
-.lg{background:rgba(0,255,136,.12);color:#00ff88;border:1px solid rgba(0,255,136,.25)}
-.lbb{background:rgba(0,170,255,.12);color:#00aaff;border:1px solid rgba(0,170,255,.25)}
-.ly{background:rgba(255,200,0,.12);color:#ffc800;border:1px solid rgba(255,200,0,.25)}
-.cpb{
-background:none;border:1px solid rgba(0,170,255,.3);
-color:#00aaff;padding:2px 8px;border-radius:6px;
-cursor:pointer;font-size:.72rem;font-family:'Cairo',sans-serif;
+.cluster-alert h3{color:var(--r);margin-bottom:10px}
+
+/* Honeypot */
+.honey-panel{
+border-radius:14px;padding:20px;margin:20px 0;
 }
-.cpb:hover{background:rgba(0,170,255,.15)}
+.honey-panel.safe{background:rgba(0,245,147,.04);border:1px solid rgba(0,245,147,.2)}
+.honey-panel.danger{background:rgba(255,59,92,.04);border:1px solid rgba(255,59,92,.2)}
+
+/* Links */
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.link{
+padding:7px 16px;border-radius:8px;
+text-decoration:none;font-size:.8rem;font-weight:600;
+transition:all .2s;display:inline-flex;align-items:center;gap:4px;
+}
+.link:hover{transform:translateY(-2px);filter:brightness(1.2)}
+.link.a{background:rgba(0,245,147,.1);color:var(--g);border:1px solid rgba(0,245,147,.2)}
+.link.b2{background:rgba(59,130,246,.1);color:var(--b);border:1px solid rgba(59,130,246,.2)}
+.link.c{background:rgba(255,183,0,.1);color:var(--y);border:1px solid rgba(255,183,0,.2)}
+
 .disc{
-background:rgba(255,200,0,.04);
-border:1px solid rgba(255,200,0,.18);
-border-radius:12px;padding:16px 20px;
-text-align:center;color:#8a7000;font-size:.8rem;margin-top:28px;
+margin-top:30px;padding:16px;
+background:rgba(255,183,0,.03);
+border:1px solid rgba(255,183,0,.1);
+border-radius:10px;text-align:center;
+font-size:.75rem;color:#555;
 }
-@media(max-width:600px){
-.hdr h1{font-size:1.4rem}
-.igrid{grid-template-columns:1fr}
-.sno{font-size:3.5rem}
+
+.copy-btn{
+background:none;border:1px solid rgba(59,130,246,.2);
+color:var(--b);padding:2px 7px;border-radius:5px;
+cursor:pointer;font-size:.68rem;margin-left:4px;
+}
+.copy-btn:hover{background:rgba(59,130,246,.1)}
+
+@media(max-width:640px){
+.search-row{flex-direction:column}
+.cards{grid-template-columns:1fr}
+.hd h1{font-size:1.6rem}
+.score-ring{width:120px;height:120px}
+.score-val .num{font-size:2.2rem}
 }
 </style>
 </head>
 <body>
-<div class="ctn">
-<div class="hdr">
-<h1>Pump.Fun Token Scanner</h1>
-<p>Smart Contract Analyzer - Token &amp; Dev Scanner</p>
-</div>
-<div class="sbox">
-<div class="srow">
-<input class="sinp" id="ta" placeholder="Paste token address here... (Solana mint address)" spellcheck="false" autocomplete="off">
-<button class="sbtn" id="sb" onclick="startScan()">
-<span>&#128270;</span><span>SCAN</span>
-</button>
-</div>
-<div class="rpcst" id="rs"><span><span class="rdot chk" id="d1"></span>Checking RPC...</span></div>
-</div>
-<div class="ldr" id="ldr"><div class="spn"></div><p id="lt">Scanning...</p></div>
-<div class="ebox" id="eb"></div>
-<div class="res" id="res">
-<div class="scrd" id="sc"><div class="snm" id="sn"></div><div class="sno" id="so"></div><div class="vrd" id="vd"></div></div>
-<div class="sgrid" id="sg"></div>
-<div class="igrid" id="ig"></div>
-<div class="hwrap" id="hw"></div>
-<div id="cb"></div>
-<div id="db"></div>
-<div class="tcrd" id="tc"></div>
-<div class="crd" id="rc" style="margin-bottom:22px"></div>
-<div class="crd" id="lc" style="margin-bottom:22px"></div>
-<div class="disc">
-Warning: This analysis is for educational purposes only, not financial advice. Always DYOR before any investment.
+<div class="app">
+<div class="hd">
+<h1>Pro Token Scanner</h1>
+<p class="sub">AI-Powered Smart Contract Analysis Engine</p>
+<div class="badges">
+<span class="badge">AI Scoring</span>
+<span class="badge">Cluster Detection</span>
+<span class="badge">Honeypot Check</span>
+<span class="badge">Bundle Analysis</span>
+<span class="badge">Dev History</span>
+<span class="badge">Whale Tracking</span>
 </div>
 </div>
+
+<div class="search-panel">
+<div class="search-row">
+<input class="search-input" id="inp" placeholder="Paste Solana token address..." spellcheck="false">
+<button class="scan-btn" id="btn" onclick="scan()">SCAN TOKEN</button>
 </div>
+<div class="status-bar" id="sbar">
+<span><span class="st-dot wait"></span>Initializing RPC...</span>
+</div>
+</div>
+
+<div class="loader" id="ldr">
+<div class="loader-ring"></div>
+<div class="loader-txt" id="ltxt">Analyzing...</div>
+<div class="loader-steps" id="lsteps"></div>
+</div>
+
+<div class="err" id="err"></div>
+<div class="results" id="res"></div>
+</div>
+
 <script>
-var RPC_POOL=[
+/* ====== CONFIG ====== */
+var RPCS=[
 'https://rpc.ankr.com/solana',
 'https://solana-api.projectserum.com',
 'https://solana-mainnet.g.alchemy.com/v2/demo',
 'https://api.mainnet-beta.solana.com'
 ];
-var activeRPC=null;
+var PF_PROXIES=[
+'',
+'https://api.allorigins.win/raw?url=',
+'https://corsproxy.io/?'
+];
+var liveRPC=null;
+var scanSteps=[];
 
-async function detectRPC(){
-var el=document.getElementById('rs');
-for(var i=0;i<RPC_POOL.length;i++){
+/* ====== RPC ====== */
+async function initRPC(){
+var sb=document.getElementById('sbar');
+for(var i=0;i<RPCS.length;i++){
 try{
-var r=await fetchRPC(RPC_POOL[i],'getHealth',[],4000);
-if(r&&!r.error){
-activeRPC=RPC_POOL[i];
-var s=RPC_POOL[i].replace('https://','').split('/')[0];
-el.innerHTML='<span><span class="rdot ok"></span>RPC Connected: <b>'+s+'</b></span>';
+var r=await _rpc(RPCS[i],'getSlot',[],3500);
+if(r&&r.result){
+liveRPC=RPCS[i];
+var n=RPCS[i].replace('https://','').split(/[\/\?]/)[0];
+sb.innerHTML='<span><span class="st-dot on"></span>Connected: '+n+'</span>'+
+'<span><span class="st-dot on"></span>Slot: '+r.result+'</span>';
 return;
 }
 }catch(e){}
 }
-el.innerHTML='<span><span class="rdot bad"></span>Warning: No RPC found - will try all endpoints during scan</span>';
+sb.innerHTML='<span><span class="st-dot off"></span>No RPC detected - will try all on scan</span>';
 }
 
-async function fetchRPC(url,method,params,timeout){
-timeout=timeout||10000;
-var ctrl=new AbortController();
-var tid=setTimeout(function(){ctrl.abort()},timeout);
+async function _rpc(url,method,params,ms){
+ms=ms||12000;
+var ac=new AbortController();
+var t=setTimeout(function(){ac.abort()},ms);
 try{
 var r=await fetch(url,{
 method:'POST',
 headers:{'Content-Type':'application/json'},
 body:JSON.stringify({jsonrpc:'2.0',id:1,method:method,params:params}),
-signal:ctrl.signal
+signal:ac.signal
 });
-clearTimeout(tid);
-return await r.json();
-}catch(e){
-clearTimeout(tid);
-throw e;
-}
+clearTimeout(t);
+return r.json();
+}catch(e){clearTimeout(t);throw e;}
 }
 
-async function rpc(method,params){
-var urls=activeRPC?[activeRPC].concat(RPC_POOL.filter(function(u){return u!==activeRPC})):RPC_POOL;
-for(var i=0;i<urls.length;i++){
+async function solRPC(method,params){
+var pool=liveRPC?[liveRPC].concat(RPCS.filter(function(u){return u!==liveRPC})):RPCS;
+for(var i=0;i<pool.length;i++){
 try{
-var r=await fetchRPC(urls[i],method,params);
-if(r&&!r.error){activeRPC=urls[i];return r;}
+var r=await _rpc(pool[i],method,params);
+if(r&&!r.error){liveRPC=pool[i];return r;}
 }catch(e){}
 }
-throw new Error('All RPC endpoints failed ('+method+')');
-}
-
-async function getTokenInfo(mint){
-var decimals=6,totalSupply=0,uiSupply=0;
-var mintAuth=null,freezeAuth=null;
-try{
-var sr=await rpc('getTokenSupply',[mint]);
-var sv=sr&&sr.result&&sr.result.value;
-if(sv){decimals=sv.decimals;totalSupply=sv.amount;uiSupply=sv.uiAmount||0;}
-}catch(e){}
-try{
-var ar=await rpc('getAccountInfo',[mint,{encoding:'jsonParsed'}]);
-var info=ar&&ar.result&&ar.result.value&&ar.result.value.data&&ar.result.value.data.parsed&&ar.result.value.data.parsed.info;
-if(info){mintAuth=info.mintAuthority||null;freezeAuth=info.freezeAuthority||null;if(!decimals)decimals=info.decimals||6;}
-}catch(e){}
-var price=0,marketCap=0;
-try{
-var pr=await fetch('https://api.jup.ag/price/v2?ids='+mint,{headers:{'Accept':'application/json'}});
-if(pr.ok){var pd=await pr.json();if(pd&&pd.data&&pd.data[mint]){price=parseFloat(pd.data[mint].price)||0;marketCap=price*uiSupply;}}
-}catch(e){}
-return{decimals:decimals,totalSupply:totalSupply,uiSupply:uiSupply,price:price,marketCap:marketCap,mintAuthority:mintAuth,freezeAuthority:freezeAuth,isRenounced:!mintAuth};
+throw new Error('RPC failed: '+method);
 }
 
-async function getTopHolders(mint,uiSupply){
-var holders=[];
+/* ====== PUMP.FUN FETCH ====== */
+async function pfFetch(path){
+var base='https://frontend-api.pump.fun/'+path;
+for(var i=0;i<PF_PROXIES.length;i++){
 try{
-var r=await rpc('getTokenLargestAccounts',[mint]);
-var raw=r&&r.result&&r.result.value||[];
-for(var i=0;i<raw.length;i++){
-var a=raw[i];
-holders.push({address:a.address,amount:parseFloat(a.uiAmount||0),percent:uiSupply>0?parseFloat(a.uiAmount||0)/uiSupply*100:0,owner:null});
+var url=PF_PROXIES[i]?(PF_PROXIES[i]+encodeURIComponent(base)):base;
+var r=await fetch(url,{signal:AbortSignal.timeout(8000)});
+if(r.ok){var d=await r.json();if(d)return d;}
+}catch(e){}
+}
+return null;
+}
+
+/* ====== DATA FETCHERS ====== */
+async function fetchTokenData(mint){
+var info={decimals:6,supply:0,uiSupply:0,price:0,mcap:0,mintAuth:null,freezeAuth:null,isRenounced:true,volume24h:0,priceChange:0,liquidity:0};
+
+try{
+var sr=await solRPC('getTokenSupply',[mint]);
+var sv=sr.result.value;
+info.decimals=sv.decimals;
+info.supply=sv.amount;
+info.uiSupply=sv.uiAmount||0;
+}catch(e){}
+
+try{
+var ar=await solRPC('getAccountInfo',[mint,{encoding:'jsonParsed'}]);
+var pi=ar.result.value.data.parsed.info;
+info.mintAuth=pi.mintAuthority||null;
+info.freezeAuth=pi.freezeAuthority||null;
+info.isRenounced=!pi.mintAuthority;
+}catch(e){}
+
+// Jupiter price
+try{
+var pr=await fetch('https://api.jup.ag/price/v2?ids='+mint);
+if(pr.ok){var pd=await pr.json();if(pd.data&&pd.data[mint]){info.price=parseFloat(pd.data[mint].price)||0;info.mcap=info.price*info.uiSupply;}}
+}catch(e){}
+
+// DexScreener for volume, liquidity, price change
+try{
+var dr=await fetch('https://api.dexscreener.com/latest/dex/tokens/'+mint);
+if(dr.ok){
+var dd=await dr.json();
+if(dd.pairs&&dd.pairs.length>0){
+var p=dd.pairs[0];
+info.volume24h=p.volume&&p.volume.h24?parseFloat(p.volume.h24):0;
+info.priceChange=p.priceChange&&p.priceChange.h24?parseFloat(p.priceChange.h24):0;
+info.liquidity=p.liquidity&&p.liquidity.usd?parseFloat(p.liquidity.usd):0;
+if(!info.price&&p.priceUsd)info.price=parseFloat(p.priceUsd);
+if(!info.mcap&&p.marketCap)info.mcap=parseFloat(p.marketCap);
+if(!info.mcap&&p.fdv)info.mcap=parseFloat(p.fdv);
+}
 }
 }catch(e){}
-var promises=[];
+
+return info;
+}
+
+async function fetchHolders(mint,uiSupply){
+var holders=[],t5=0,t10=0;
+try{
+var r=await solRPC('getTokenLargestAccounts',[mint]);
+var accs=r.result.value||[];
+for(var i=0;i<accs.length;i++){
+var a=accs[i];
+holders.push({
+addr:a.address,
+amount:parseFloat(a.uiAmount||0),
+pct:uiSupply>0?(parseFloat(a.uiAmount||0)/uiSupply*100):0,
+owner:null
+});
+}
+}catch(e){}
+
+// resolve owners concurrently
+var tasks=[];
 for(var j=0;j<Math.min(holders.length,10);j++){
 (function(idx){
-promises.push(
-rpc('getAccountInfo',[holders[idx].address,{encoding:'jsonParsed'}]).then(function(r2){
-var owner=r2&&r2.result&&r2.result.value&&r2.result.value.data&&r2.result.value.data.parsed&&r2.result.value.data.parsed.info&&r2.result.value.data.parsed.info.owner;
-if(owner)holders[idx].owner=owner;
+tasks.push(
+solRPC('getAccountInfo',[holders[idx].addr,{encoding:'jsonParsed'}])
+.then(function(r){
+try{holders[idx].owner=r.result.value.data.parsed.info.owner;}catch(e){}
 }).catch(function(){})
 );
 })(j);
 }
-await Promise.allSettled(promises);
-return{
-holders:holders,
-top5Percent:holders.slice(0,5).reduce(function(s,h){return s+h.percent},0),
-top10Percent:holders.slice(0,10).reduce(function(s,h){return s+h.percent},0),
-holderCount:holders.length
-};
+await Promise.allSettled(tasks);
+
+t5=holders.slice(0,5).reduce(function(s,h){return s+h.pct},0);
+t10=holders.slice(0,10).reduce(function(s,h){return s+h.pct},0);
+return{list:holders,t5:t5,t10:t10,count:holders.length};
 }
 
-async function getPumpData(mint){
-var def={isPumpFun:false,dev:null,devSolBalance:0,bondingCurve:null,complete:false,raydiumPool:null,name:'',symbol:'',description:'',twitter:'',telegram:'',website:'',marketCap:0,createdAt:null};
-var urls=[
-'https://frontend-api.pump.fun/coins/'+mint,
-'https://api.allorigins.win/raw?url='+encodeURIComponent('https://frontend-api.pump.fun/coins/'+mint),
-'https://corsproxy.io/?'+encodeURIComponent('https://frontend-api.pump.fun/coins/'+mint)
-];
-for(var i=0;i<urls.length;i++){
-try{
-var r=await fetch(urls[i],{signal:AbortSignal.timeout(7000)});
-if(!r.ok)continue;
-var d=await r.json();
-if(!d||!d.mint)continue;
-def.isPumpFun=true;
-def.dev=d.creator||null;
-def.bondingCurve=d.bonding_curve||null;
-def.complete=d.complete||false;
-def.raydiumPool=d.raydium_pool||null;
-def.name=d.name||'';
-def.symbol=d.symbol||'';
-def.description=d.description||'';
-def.twitter=d.twitter||'';
-def.telegram=d.telegram||'';
-def.website=d.website||'';
-def.marketCap=d.usd_market_cap||0;
-def.createdAt=d.created_timestamp||null;
-break;
-}catch(e){}
-}
-if(def.dev){
-try{var br=await rpc('getBalance',[def.dev]);def.devSolBalance=(br&&br.result&&br.result.value||0)/1e9;}catch(e){}
-}
-return def;
+async function fetchPump(mint){
+var d={is:false,dev:null,devBal:0,bc:null,done:false,pool:null,
+name:'',sym:'',desc:'',tw:'',tg:'',web:'',mcap:0,created:null,
+replies:0,nsfw:false};
+
+var raw=await pfFetch('coins/'+mint);
+if(raw&&raw.mint){
+d.is=true;
+d.dev=raw.creator;d.bc=raw.bonding_curve;
+d.done=raw.complete||false;d.pool=raw.raydium_pool;
+d.name=raw.name||'';d.sym=raw.symbol||'';
+d.desc=raw.description||'';
+d.tw=raw.twitter||'';d.tg=raw.telegram||'';d.web=raw.website||'';
+d.mcap=raw.usd_market_cap||0;
+d.created=raw.created_timestamp;
+d.nsfw=raw.nsfw||false;
 }
 
-async function getDevAnalysis(pumpData,currentMint){
-var out={address:pumpData.dev||null,totalTokens:0,ruggedTokens:0,successfulTokens:0,deadTokens:0,tokens:[],reputation:'unknown',solBalance:pumpData.devSolBalance||0};
-if(!pumpData.dev)return out;
-var urls=[
-'https://frontend-api.pump.fun/coins/user-created-coins/'+pumpData.dev+'?offset=0&limit=50&includeNsfw=true',
-'https://api.allorigins.win/raw?url='+encodeURIComponent('https://frontend-api.pump.fun/coins/user-created-coins/'+pumpData.dev+'?offset=0&limit=50&includeNsfw=true')
-];
-var tokens=[];
-for(var i=0;i<urls.length;i++){
+if(d.dev){
 try{
-var r=await fetch(urls[i],{signal:AbortSignal.timeout(8000)});
-if(!r.ok)continue;
-tokens=await r.json();
-if(Array.isArray(tokens))break;
-tokens=[];
+var br=await solRPC('getBalance',[d.dev]);
+d.devBal=(br.result.value||0)/1e9;
 }catch(e){}
 }
-out.totalTokens=tokens.length;
-for(var j=0;j<Math.min(tokens.length,30);j++){
-var t=tokens[j];
-var mcap=t.usd_market_cap||0;
-var status;
-if(t.complete&&t.raydium_pool&&mcap>40000){status='live';out.successfulTokens++;}
-else if(!t.complete&&mcap<800){status='rug';out.ruggedTokens++;}
-else{status='dead';out.deadTokens++;}
-out.tokens.push({name:t.name||'No Name',symbol:t.symbol||'--',mint:t.mint,mcap:mcap,status:status,isCurrent:t.mint===currentMint});
+return d;
 }
-var rugPct=out.totalTokens>0?out.ruggedTokens/out.totalTokens:0;
-if(out.totalTokens<=1)out.reputation='new';
-else if(rugPct>0.6)out.reputation='scammer';
-else if(rugPct>0.3)out.reputation='suspicious';
-else if(out.successfulTokens>=2)out.reputation='trusted';
-else out.reputation='neutral';
+
+async function fetchDevHistory(dev,currentMint){
+var out={addr:dev,total:0,rugs:0,ok:0,dead:0,tokens:[],rep:'unknown',bal:0};
+if(!dev)return out;
+
+var raw=await pfFetch('coins/user-created-coins/'+dev+'?offset=0&limit=100&includeNsfw=true');
+if(!Array.isArray(raw))return out;
+
+out.total=raw.length;
+for(var i=0;i<raw.length;i++){
+var t=raw[i],mc=t.usd_market_cap||0,st;
+if(t.complete&&t.raydium_pool&&mc>30000){st='live';out.ok++;}
+else if(!t.complete&&mc<500){st='rug';out.rugs++;}
+else{st='dead';out.dead++;}
+out.tokens.push({n:t.name||'Unnamed',s:t.symbol||'--',m:t.mint,mc:mc,st:st,cur:t.mint===currentMint});
+}
+
+var rr=out.total>0?out.rugs/out.total:0;
+if(out.total<=1)out.rep='new';
+else if(rr>0.6)out.rep='scammer';
+else if(rr>0.3)out.rep='suspicious';
+else if(out.ok>=2)out.rep='trusted';
+else out.rep='neutral';
+
 return out;
 }
 
-function analyzeCluster(holders){
-var out={found:false,totalPct:0,riskLevel:'low',groups:[]};
-var hs=holders.filter(function(h){return h.percent>=0.5&&h.percent<25});
-if(hs.length<4)return out;
+/* ====== AI ANALYSIS ====== */
+function clusterScan(holders){
+var r={found:false,pct:0,risk:'low',groups:[]};
+var hs=holders.filter(function(h){return h.pct>=0.4&&h.pct<20});
+if(hs.length<4)return r;
+
 var used={};
 for(var i=0;i<hs.length;i++){
 if(used[i])continue;
-var grp=[i];
+var g=[i];
 for(var j=i+1;j<hs.length;j++){
 if(used[j])continue;
-var ratio=hs[i].amount>0?hs[j].amount/hs[i].amount:0;
-if(ratio>0.72&&ratio<1.28){grp.push(j);used[j]=true;}
+var rat=hs[i].amount>0?hs[j].amount/hs[i].amount:0;
+if(rat>.7&&rat<1.3){g.push(j);used[j]=1;}
 }
-if(grp.length>=3){
-var pct=0;for(var k=0;k<grp.length;k++)pct+=hs[grp[k]].percent;
-out.groups.push({count:grp.length,pct:pct});
-out.totalPct+=pct;
-out.found=true;
+if(g.length>=3){
+var p=0;for(var k=0;k<g.length;k++)p+=hs[g[k]].pct;
+r.groups.push({n:g.length,p:p});
+r.pct+=p;r.found=true;
 }
-used[i]=true;
+used[i]=1;
 }
-if(out.totalPct>30)out.riskLevel='high';
-else if(out.totalPct>15)out.riskLevel='medium';
-return out;
+r.risk=r.pct>30?'high':r.pct>15?'medium':'low';
+return r;
 }
 
-function calcScore(ti,hd,pf,dev,cl){
-var score=100;
-var risks=[],pros=[];
-if(ti.mintAuthority){score-=25;risks.push('Mint Authority NOT renounced - can mint new tokens');}
-else pros.push('Mint Authority renounced');
-if(ti.freezeAuthority){score-=20;risks.push('Freeze Authority exists - can freeze wallets');}
-else pros.push('No Freeze Authority');
-var t10=hd.top10Percent;
-if(t10>50){score-=20;risks.push('Top 10 hold '+t10.toFixed(1)+'% - very high concentration');}
-else if(t10>30){score-=10;risks.push('Top 10 hold '+t10.toFixed(1)+'% - medium concentration');}
-else pros.push('Good distribution - Top 10 hold '+t10.toFixed(1)+'%');
-var top1=hd.holders[0];
-if(top1&&top1.percent>20){score-=15;risks.push('Single wallet holds '+top1.percent.toFixed(1)+'% - dump risk');}
-if(cl.found){var d=cl.riskLevel==='high'?20:10;score-=d;risks.push('Suspicious cluster detected: '+cl.totalPct.toFixed(1)+'%');}
-else pros.push('No suspicious clusters detected');
-if(dev.reputation==='scammer'){score-=30;risks.push('Dev is likely SCAMMER! '+dev.ruggedTokens+'/'+dev.totalTokens+' rugged');}
-else if(dev.reputation==='suspicious'){score-=15;risks.push('Dev is suspicious - high rug ratio');}
-else if(dev.reputation==='trusted'){score+=5;pros.push('Dev is trusted - '+dev.successfulTokens+' successful tokens');}
-else if(dev.reputation==='new'){score-=5;risks.push('Dev is new - no history');}
-if(pf.isPumpFun){
-pros.push('Token is on Pump.Fun');
-if(pf.complete){score+=5;pros.push('Bonding Curve completed');}
-else{score-=5;risks.push('Bonding Curve not completed yet');}
-if(pf.raydiumPool){score+=5;pros.push('Raydium Pool exists');}
-if(!pf.twitter&&!pf.telegram&&!pf.website){score-=5;risks.push('No social media links');}
+function bundleCheck(holders,pump){
+var bundled=0,bundlePct=0;
+// check for wallets that bought at same time (similar amounts near bonding curve)
+if(holders.length>=5){
+var amounts=holders.slice(0,20).map(function(h){return h.amount}).filter(function(a){return a>0});
+amounts.sort(function(a,b){return a-b});
+for(var i=0;i<amounts.length-2;i++){
+var a1=amounts[i],a2=amounts[i+1],a3=amounts[i+2];
+if(a1>0&&Math.abs(a2-a1)/a1<0.15&&Math.abs(a3-a1)/a1<0.15){
+bundled+=3;
+var matching=holders.filter(function(h){return Math.abs(h.amount-a1)/a1<0.15});
+bundlePct=matching.reduce(function(s,h){return s+h.pct},0);
+break;
+}
+}
+}
+return{detected:bundled>=3,count:bundled,pct:bundlePct};
+}
+
+function honeypotCheck(tokenInfo,pump){
+var flags=[];var safe=true;
+if(tokenInfo.mintAuth){flags.push('Mint authority active');safe=false;}
+if(tokenInfo.freezeAuth){flags.push('Freeze authority active');safe=false;}
+if(tokenInfo.liquidity>0&&tokenInfo.liquidity<500){flags.push('Very low liquidity: $'+F(tokenInfo.liquidity));safe=false;}
+if(tokenInfo.volume24h>0&&tokenInfo.mcap>0){
+var vr=tokenInfo.volume24h/tokenInfo.mcap;
+if(vr>5){flags.push('Suspicious volume/mcap ratio: '+vr.toFixed(1)+'x');safe=false;}
+}
+if(pump.is&&!pump.done&&!pump.pool){flags.push('No trading pool yet');}
+return{safe:safe,flags:flags};
+}
+
+function aiScore(ti,hd,pf,dev,cl,bundle,honey){
+var s=100,risks=[],pros=[];
+
+// Security checks
+if(ti.mintAuth){s-=25;risks.push('Mint Authority active - can create new tokens');}
+else{pros.push('Mint Authority renounced');}
+
+if(ti.freezeAuth){s-=20;risks.push('Freeze Authority active - can freeze wallets');}
+else{pros.push('No Freeze Authority');}
+
+// Holder distribution
+if(hd.t10>50){s-=20;risks.push('Top 10 hold '+hd.t10.toFixed(1)+'% - extreme concentration');}
+else if(hd.t10>35){s-=12;risks.push('Top 10 hold '+hd.t10.toFixed(1)+'% - high concentration');}
+else if(hd.t10>20){s-=5;risks.push('Top 10 hold '+hd.t10.toFixed(1)+'% - moderate');}
+else{pros.push('Excellent distribution - Top 10: '+hd.t10.toFixed(1)+'%');}
+
+if(hd.list[0]&&hd.list[0].pct>20){s-=15;risks.push('Whale alert: #1 holds '+hd.list[0].pct.toFixed(1)+'%');}
+
+// Cluster
+if(cl.found){
+if(cl.risk==='high'){s-=22;risks.push('HIGH cluster risk: '+cl.pct.toFixed(1)+'% in coordinated wallets');}
+else{s-=10;risks.push('Cluster detected: '+cl.pct.toFixed(1)+'%');}
+}else{pros.push('No clusters detected');}
+
+// Bundle
+if(bundle.detected){s-=18;risks.push('Bundled buys detected: ~'+bundle.count+' wallets ('+bundle.pct.toFixed(1)+'%)');}
+else{pros.push('No bundled buys detected');}
+
+// Honeypot
+if(!honey.safe){s-=10;for(var i=0;i<honey.flags.length;i++)risks.push('Honeypot flag: '+honey.flags[i]);}
+else{pros.push('Honeypot checks passed');}
+
+// Dev
+if(dev.rep==='scammer'){s-=30;risks.push('Developer is likely SCAMMER ('+dev.rugs+'/'+dev.total+' rugged)');}
+else if(dev.rep==='suspicious'){s-=15;risks.push('Developer has suspicious history');}
+else if(dev.rep==='trusted'){s+=5;pros.push('Developer is trusted ('+dev.ok+' successful tokens)');}
+else if(dev.rep==='new'){s-=5;risks.push('New developer - no history');}
+
+// Pump.fun specifics
+if(pf.is){
+pros.push('Pump.Fun token');
+if(pf.done){s+=5;pros.push('Bonding curve completed');}
+else{s-=5;risks.push('Bonding curve incomplete');}
+if(pf.pool){s+=5;pros.push('Raydium pool exists');}
+if(!pf.tw&&!pf.tg&&!pf.web){s-=5;risks.push('No social media');}
 else{
-if(pf.twitter)pros.push('Twitter account exists');
-if(pf.telegram)pros.push('Telegram exists');
-if(pf.website)pros.push('Website exists');
+if(pf.tw)pros.push('Twitter linked');
+if(pf.tg)pros.push('Telegram linked');
+if(pf.web)pros.push('Website linked');
 }
-}
-score=Math.max(0,Math.min(100,Math.round(score)));
-var mcap=pf.marketCap||ti.marketCap||0;
-return{score:score,risks:risks,pros:pros,mcap:mcap,targets:calcTargets(mcap,score)};
 }
 
-function calcTargets(mcap,score){
+// Liquidity
+if(ti.liquidity>10000){pros.push('Good liquidity: $'+F(ti.liquidity));}
+else if(ti.liquidity>0){risks.push('Low liquidity: $'+F(ti.liquidity));}
+
+// Volume
+if(ti.volume24h>5000){pros.push('Healthy volume: $'+F(ti.volume24h));}
+
+s=Math.max(0,Math.min(100,Math.round(s)));
+var mcap=pf.mcap||ti.mcap||0;
+return{score:s,risks:risks,pros:pros,mcap:mcap};
+}
+
+function genTargets(mcap,score){
 var f=score/100;
-var out=[];
-var items=[
-{x:'2x',m:2,base:28,boost:35},
-{x:'5x',m:5,base:14,boost:25},
-{x:'10x',m:10,base:7,boost:18},
-{x:'50x',m:50,base:2,boost:10},
-{x:'100x',m:100,base:1,boost:6}
+return[
+{x:'2x',mc:mcap*2,p:Math.min(28+f*40,75)},
+{x:'5x',mc:mcap*5,p:Math.min(12+f*28,55)},
+{x:'10x',mc:mcap*10,p:Math.min(6+f*20,40)},
+{x:'50x',mc:mcap*50,p:Math.min(2+f*10,18)},
+{x:'100x',mc:mcap*100,p:Math.min(1+f*6,10)}
 ];
-for(var i=0;i<items.length;i++){
-var it=items[i];
-var pct=Math.min(it.base+it.boost*f,75);
-out.push({
-x:it.x,
-mc:'$'+fmt(mcap*it.m),
-pct:pct.toFixed(0),
-color:pct>40?'#00ff88':pct>20?'#ffc800':'#ff4444'
-});
-}
-return out;
 }
 
-async function startScan(){
-var mint=document.getElementById('ta').value.trim();
-if(!mint){showErr('Please enter token address first');return;}
-if(!/^[A-Za-z0-9]{32,44}$/.test(mint)){showErr('Invalid token address - must be 32-44 characters');return;}
-hideErr();hideRes();showLoad(true);setBtnD(true);
+function genAIVerdict(score,ti,pf,dev,cl,bundle,honey){
+var lines=[];
+if(score>=75)lines.push('This token shows strong safety indicators. The smart contract appears clean with renounced authorities.');
+else if(score>=50)lines.push('This token has moderate risk factors. Some concerns were identified that require caution.');
+else if(score>=30)lines.push('WARNING: Multiple red flags detected. This token carries significant risk.');
+else lines.push('DANGER: This token has critical security issues and is very likely a scam or rug pull.');
+
+if(dev.rep==='scammer')lines.push('The developer has a history of rug pulls ('+dev.rugs+' out of '+dev.total+' tokens). Extremely high risk.');
+else if(dev.rep==='trusted')lines.push('The developer has a positive track record with '+dev.ok+' successful tokens.');
+else if(dev.rep==='new')lines.push('This is a new developer with no previous history - exercise extra caution.');
+
+if(cl.found)lines.push('Cluster analysis reveals coordinated wallets holding '+cl.pct.toFixed(1)+'% - possible insider accumulation.');
+if(bundle.detected)lines.push('Bundled buy patterns detected suggesting coordinated market entry.');
+if(!honey.safe)lines.push('Honeypot warning flags: '+honey.flags.join(', ')+'.');
+
+if(ti.liquidity>0&&ti.liquidity<2000)lines.push('Extremely low liquidity ($'+F(ti.liquidity)+') makes this token highly susceptible to price manipulation.');
+
+return lines.join(' ');
+}
+
+/* ====== MAIN SCAN ====== */
+async function scan(){
+var mint=document.getElementById('inp').value.trim();
+if(!mint)return sErr('Enter a token address');
+if(!/^[A-Za-z0-9]{32,44}$/.test(mint))return sErr('Invalid address format');
+
+hErr();document.getElementById('res').className='results';
+sLoad(1);sBtn(1);scanSteps=[];
+
 try{
-setTxt('Getting token info...');
-var ti=await getTokenInfo(mint);
-setTxt('Analyzing holders...');
-var hd=await getTopHolders(mint,ti.uiSupply);
-setTxt('Checking Pump.Fun...');
-var pf=await getPumpData(mint);
-setTxt('Analyzing developer...');
-var dev=await getDevAnalysis(pf,mint);
-setTxt('Scanning clusters...');
-var cl=analyzeCluster(hd.holders);
-setTxt('Calculating safety score...');
-var an=calcScore(ti,hd,pf,dev,cl);
-showLoad(false);setBtnD(false);
-render(mint,ti,hd,pf,dev,cl,an);
+addStep('Connecting to Solana RPC...');
+await sleep(300);markStep(0);
+
+addStep('Fetching token data...');
+var ti=await fetchTokenData(mint);markStep(1);
+
+addStep('Analyzing holder distribution...');
+var hd=await fetchHolders(mint,ti.uiSupply);markStep(2);
+
+addStep('Querying Pump.Fun data...');
+var pf=await fetchPump(mint);markStep(3);
+
+addStep('Analyzing developer history...');
+var dev=await fetchDevHistory(pf.dev,mint);
+dev.bal=pf.devBal;markStep(4);
+
+addStep('Running cluster analysis...');
+var cl=clusterScan(hd.list);markStep(5);
+
+addStep('Checking bundled buys...');
+var bundle=bundleCheck(hd.list,pf);markStep(6);
+
+addStep('Running honeypot detection...');
+var honey=honeypotCheck(ti,pf);markStep(7);
+
+addStep('AI scoring engine...');
+var an=aiScore(ti,hd,pf,dev,cl,bundle,honey);markStep(8);
+
+addStep('Generating report...');
+var targets=genTargets(an.mcap,an.score);
+var verdict=genAIVerdict(an.score,ti,pf,dev,cl,bundle,honey);
+markStep(9);
+
+sLoad(0);sBtn(0);
+buildUI(mint,ti,hd,pf,dev,cl,bundle,honey,an,targets,verdict);
+
 }catch(e){
-showLoad(false);setBtnD(false);
+sLoad(0);sBtn(0);
 console.error(e);
-showErr('Error: '+e.message+'<br><br>Make sure:<br>- Token address is correct<br>- Internet connection is active<br>- Token exists on Solana');
+sErr('Scan failed: '+e.message);
 }
 }
 
-function render(mint,ti,hd,pf,dev,cl,an){
+/* ====== BUILD UI ====== */
+function buildUI(mint,ti,hd,pf,dev,cl,bundle,honey,an,targets,verdict){
 var name=pf.name||'Unknown Token';
-var symbol=pf.symbol||'--';
+var sym=pf.sym||'--';
 var mcap=an.mcap;
-var cls=an.score>=70?'sf':an.score>=40?'wn':'dg';
-var sc=document.getElementById('sc');
-sc.className='scrd '+cls;
-document.getElementById('sn').textContent=name+' ('+symbol+')';
-document.getElementById('so').textContent=an.score+'%';
-var vt;
-if(an.score>=70)vt='SAFE - Low Risk Entry';
-else if(an.score>=50)vt='MEDIUM RISK - Be Careful';
-else if(an.score>=30)vt='HIGH RISK - Not Recommended';
-else vt='VERY DANGEROUS - Likely SCAM';
-document.getElementById('vd').textContent=vt;
-var dc=devColor(dev.reputation);
-document.getElementById('sg').innerHTML=
-stc('Market Cap','$'+fmt(mcap),mcap>100000?'#00ff88':mcap>10000?'#ffc800':'#ff4444')+
-stc('Holders',hd.holderCount,'#00aaff')+
-stc('Mint Auth',ti.isRenounced?'Safe':'DANGER',ti.isRenounced?'#00ff88':'#ff4444')+
-stc('Top 10',hd.top10Percent.toFixed(1)+'%',hd.top10Percent>50?'#ff4444':hd.top10Percent>25?'#ffc800':'#00ff88')+
-stc('Platform',pf.isPumpFun?'Pump.Fun':'Unknown',pf.isPumpFun?'#ffc800':'#888')+
-stc('Developer',devLabel(dev.reputation),dc);
-var chk=function(v){return v?'<span class="vl g">Safe</span>':'<span class="vl r">DANGER</span>';};
-document.getElementById('ig').innerHTML=
-'<div class="crd"><h3>Token Info</h3>'+
-rw('Name','<span class="vl w">'+name+'</span>')+
-rw('Symbol','<span class="vl b">'+symbol+'</span>')+
-rw('Total Supply','<span class="vl w">'+fmt(ti.uiSupply)+'</span>')+
-rw('Price','<span class="vl g">$'+(ti.price>0?ti.price.toExponential(4):'--')+'</span>')+
-rw('Decimals','<span class="vl w">'+ti.decimals+'</span>')+
-rw('Bonding Curve',pf.isPumpFun?(pf.complete?'<span class="vl g">Completed</span>':'<span class="vl y">Not Complete</span>'):'<span class="vl" style="color:#555">N/A</span>')+
-rw('Raydium Pool',pf.raydiumPool?'<span class="vl g">Exists</span>':'<span class="vl y">Not Found</span>')+
-(pf.description?rw('Description','<span class="vl w" style="font-size:.8rem;direction:ltr;word-break:break-all">'+pf.description.slice(0,180)+'</span>'):'')+
-'</div>'+
-'<div class="crd"><h3>Security Checks</h3>'+
-rw('Mint Authority',chk(ti.isRenounced))+
-rw('Freeze Authority',chk(!ti.freezeAuthority))+
-rw('Cluster',cl.found?'<span class="vl r">FOUND '+cl.totalPct.toFixed(1)+'%</span>':'<span class="vl g">Clean</span>')+
-rw('Dev Reputation','<span class="vl" style="color:'+dc+'">'+devLabel(dev.reputation)+'</span>')+
-rw('Dev Tokens','<span class="vl w">'+dev.totalTokens+'</span>')+
-rw('Dev SOL','<span class="vl b">'+dev.solBalance.toFixed(3)+'</span>')+
-rw('Social Media',(pf.twitter||pf.telegram||pf.website)?'<span class="vl g">'+(pf.twitter?'X ':'')+(pf.telegram?'TG ':'')+(pf.website?'Web':'')+'</span>':'<span class="vl r">None</span>')+
-'</div>';
-var hh='<div class="crd"><h3>Top Holders</h3>'+
-rw('Top 5','<span class="vl '+(hd.top5Percent>30?'r':hd.top5Percent>15?'y':'g')+'">'+hd.top5Percent.toFixed(1)+'%</span>')+
-'<div class="prg"><div class="pf" style="width:'+Math.min(hd.top5Percent,100)+'%;background:'+(hd.top5Percent>30?'#ff4444':hd.top5Percent>15?'#ffc800':'#00ff88')+'"></div></div>'+
-rw('Top 10','<span class="vl '+(hd.top10Percent>50?'r':hd.top10Percent>25?'y':'g')+'">'+hd.top10Percent.toFixed(1)+'%</span>')+
-'<div class="prg"><div class="pf" style="width:'+Math.min(hd.top10Percent,100)+'%;background:'+(hd.top10Percent>50?'#ff4444':hd.top10Percent>25?'#ffc800':'#00ff88')+'"></div></div>'+
-'<table><thead><tr><th>#</th><th>Wallet</th><th>%</th><th>Note</th></tr></thead><tbody>';
-for(var i=0;i<Math.min(hd.holders.length,15);i++){
-var h=hd.holders[i];
-var wa=h.owner||h.address;
-var pct=h.percent.toFixed(2);
-var col=h.percent>10?'#ff4444':h.percent>5?'#ffc800':'#00ff88';
-var note='';
-if(pf.bondingCurve&&wa===pf.bondingCurve)note='Bonding Curve';
-else if(pf.dev&&wa===pf.dev)note='Developer';
-else if(h.percent>10)note='BIG Whale';
-else if(h.percent>5)note='Whale';
-hh+='<tr><td>'+(i+1)+'</td><td><span class="adr">'+shorten(wa)+'</span> <button class="cpb" onclick="cp(\''+wa+'\')">Copy</button></td><td><b style="color:'+col+'">'+pct+'%</b></td><td style="font-size:.78rem;color:#888">'+note+'</td></tr>';
-}
-hh+='</tbody></table></div>';
-document.getElementById('hw').innerHTML=hh;
-document.getElementById('cb').innerHTML=cl.found?
-'<div class="clbx"><h3>WARNING - Linked Wallet Cluster</h3><p style="color:#ff9999;margin:12px 0;line-height:1.7">Suspicious linked wallets detected holding <strong style="color:#ff4444">'+cl.totalPct.toFixed(1)+'%</strong> together. Possible price manipulation.</p><div class="prg"><div class="pf" style="width:'+Math.min(cl.totalPct,100)+'%;background:#ff4444"></div></div><p style="margin-top:10px;font-size:.82rem;color:#666">Risk Level: <span style="color:'+(cl.riskLevel==='high'?'#ff4444':'#ffc800')+';font-weight:700">'+(cl.riskLevel==='high'?'HIGH':'MEDIUM')+'</span></p></div>':'';
-var dvh='<div class="crd" style="margin-bottom:22px"><h3>Developer Analysis <span style="font-size:.7em;color:'+dc+';margin-right:8px">('+devLabel(dev.reputation)+')</span></h3>'+
-rw('Address','<span class="adr">'+shorten(dev.address||'Unknown')+'</span>'+(dev.address?' <button class="cpb" onclick="cp(\''+dev.address+'\')">Copy</button>':''))+
-rw('Total Tokens','<span class="vl w">'+dev.totalTokens+'</span>')+
-rw('Successful','<span class="vl g">'+dev.successfulTokens+'</span>')+
-rw('Rugged','<span class="vl r">'+dev.ruggedTokens+'</span>')+
-rw('Dead','<span class="vl y">'+dev.deadTokens+'</span>')+
-rw('SOL Balance','<span class="vl b">'+dev.solBalance.toFixed(3)+'</span>');
-if(dev.tokens.length){
-dvh+='<div style="margin-top:18px"><b style="color:#666;font-size:.85rem">Recent Tokens:</b></div>';
-for(var j=0;j<Math.min(dev.tokens.length,10);j++){
-var tk=dev.tokens[j];
-var bc=tk.status==='live'?'lv':tk.status==='rug'?'rg':'dd';
-var bl=tk.status==='live'?'ALIVE':tk.status==='rug'?'RUGGED':'DEAD';
-dvh+='<div class="dvi" style="'+(tk.isCurrent?'border:1px solid rgba(0,255,136,.3)':'')+'"><div style="flex:1"><div style="font-weight:600;color:'+(tk.isCurrent?'#00ff88':'#ddd')+';font-size:.9rem">'+(tk.isCurrent?'>> ':'')+tk.name+' ('+tk.symbol+')</div><div style="font-size:.75rem;color:#555;font-family:monospace;direction:ltr">'+shorten(tk.mint)+'</div></div><div style="text-align:right"><div style="font-size:.82rem;color:#00aaff">$'+fmt(tk.mcap)+'</div><span class="bdg '+bc+'">'+bl+'</span></div></div>';
-}
-}
-dvh+='</div>';
-document.getElementById('db').innerHTML=dvh;
-var tgt='<h3>Target Analysis</h3><p style="color:#666;font-size:.85rem;margin-bottom:18px">Current MCap: <strong style="color:#00ff88">$'+fmt(mcap)+'</strong></p><div class="tgrid">';
-for(var m=0;m<an.targets.length;m++){
-var tg=an.targets[m];
-tgt+='<div class="ti"><div class="mx" style="color:'+tg.color+'">'+tg.x+'</div><div class="tl">'+tg.mc+'</div><div class="pb" style="color:'+tg.color+'">Prob: '+tg.pct+'%</div></div>';
-}
-tgt+='</div>';
-document.getElementById('tc').innerHTML=tgt;
-var rch='<h3>Risk Analysis</h3>';
-for(var p=0;p<an.pros.length;p++)rch+='<div class="ri ok">'+an.pros[p]+'</div>';
-for(var q=0;q<an.risks.length;q++)rch+='<div class="ri bd">'+an.risks[q]+'</div>';
-document.getElementById('rc').innerHTML=rch;
-document.getElementById('lc').innerHTML=
-'<h3>Useful Links</h3><div class="lrow">'+
-'<a href="https://pump.fun/'+mint+'" target="_blank" class="lbtn lg">Pump.Fun</a>'+
-'<a href="https://solscan.io/token/'+mint+'" target="_blank" class="lbtn lbb">Solscan</a>'+
-'<a href="https://birdeye.so/token/'+mint+'?chain=solana" target="_blank" class="lbtn ly">Birdeye</a>'+
-'<a href="https://dexscreener.com/solana/'+mint+'" target="_blank" class="lbtn lbb">DexScreener</a>'+
-'<a href="https://rugcheck.xyz/tokens/'+mint+'" target="_blank" class="lbtn lg">RugCheck</a>'+
-(pf.twitter?'<a href="https://twitter.com/'+pf.twitter+'" target="_blank" class="lbtn ly">Twitter</a>':'')+
-(pf.telegram?'<a href="https://t.me/'+pf.telegram+'" target="_blank" class="lbtn lbb">Telegram</a>':'')+
-(pf.website?'<a href="'+pf.website+'" target="_blank" class="lbtn lg">Website</a>':'')+
-'</div>';
-document.getElementById('res').classList.add('on');
-document.getElementById('res').scrollIntoView({behavior:'smooth',block:'start'});
+var cls=an.score>=70?'safe':an.score>=40?'warn':'danger';
+var clr=cls==='safe'?'var(--g)':cls==='warn'?'var(--y)':'var(--r)';
+var circ=2*Math.PI*68;
+var offset=circ-circ*an.score/100;
+
+var html='';
+
+// Score ring
+html+='<div class="main-score '+cls+'">';
+html+='<div class="token-name">'+name+' ('+sym+')</div>';
+html+='<div class="score-ring">';
+html+='<svg viewBox="0 0 152 152"><circle class="bg" cx="76" cy="76" r="68"/>';
+html+='<circle class="fg" cx="76" cy="76" r="68" stroke="'+clr+'" stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'"/></svg>';
+html+='<div class="score-val"><div class="num">'+an.score+'</div><div class="lbl">Safety Score</div></div>';
+html+='</div>';
+var vt=an.score>=70?'LOW RISK - Relatively Safe':an.score>=50?'MEDIUM RISK - Proceed with Caution':an.score>=30?'HIGH RISK - Not Recommended':'EXTREME RISK - Likely Scam';
+html+='<div class="verdict-text">'+vt+'</div>';
+html+='</div>';
+
+// AI Verdict
+html+='<div class="ai-verdict"><h4>AI Analysis</h4><p>'+verdict+'</p></div>';
+
+// Stats
+html+='<div class="stats">';
+html+=mkStat('MARKET CAP','$'+F(mcap),mcap>100000?'var(--g)':mcap>10000?'var(--y)':'var(--r)');
+html+=mkStat('PRICE','$'+(ti.price>0?ti.price.toExponential(3):'--'),'var(--g)');
+html+=mkStat('VOLUME 24H','$'+F(ti.volume24h),ti.volume24h>5000?'var(--g)':'var(--y)');
+html+=mkStat('LIQUIDITY','$'+F(ti.liquidity),ti.liquidity>5000?'var(--g)':ti.liquidity>0?'var(--y)':'var(--r)');
+html+=mkStat('HOLDERS',hd.count,'var(--b)');
+html+=mkStat('TOP 10',hd.t10.toFixed(1)+'%',hd.t10>50?'var(--r)':hd.t10>25?'var(--y)':'var(--g)');
+html+=mkStat('PLATFORM',pf.is?'Pump.Fun':'Unknown',pf.is?'var(--y)':'#555');
+html+=mkStat('DEV',devLbl(dev.rep),devClr(dev.rep));
+html+='</div>';
+
+// Honeypot
+html+='<div class="honey-panel '+(honey.safe?'safe':'danger')+'">';
+html+='<h4 style="margin-bottom:8px;color:'+(honey.safe?'var(--g)':'var(--r)');
+html+='">'+(honey.safe?'Honeypot Check: PASSED':'Honeypot Warning')+'</h4>';
+if(!honey.safe){for(var i=0;i<honey.flags.length;i++)html+='<div class="ritem bad">'+honey.flags[i]+'</div>';}
+else html+='<p style="color:#666;font-size:.85rem">No honeypot indicators detected</p>';
+html+='</div>';
+
+// Bundle check
+if(bundle.detected){
+html+='<div class="cluster-alert">';
+html+='<h3>Bundled Buys Detected</h3>';
+html+='<p style="color:var(--r);font-size:.85rem;margin:8px 0">~'+bundle.count+' wallets bought with nearly identical amounts ('+bundle.pct.toFixed(1)+'% total). This suggests coordinated buying, possibly by the same entity.</p>';
+html+='</div>';
 }
 
-function fmt(n){
-if(!n||n===0)return '0';
+// Cards
+html+='<div class="cards">';
+// Token info card
+html+='<div class="card"><h3>Token Info</h3>';
+html+=mkRow('Name',name)+mkRow('Symbol',sym);
+html+=mkRow('Supply',F(ti.uiSupply));
+html+=mkRow('Decimals',ti.decimals);
+html+=mkRow('Bonding',pf.is?(pf.done?'<span style="color:var(--g)">Complete</span>':'<span style="color:var(--y)">Incomplete</span>'):'N/A');
+html+=mkRow('Pool',pf.pool?'<span style="color:var(--g)">Raydium</span>':'<span style="color:var(--y)">None</span>');
+html+=mkRow('24h Change',ti.priceChange?(ti.priceChange>0?'+':'')+ti.priceChange.toFixed(1)+'%':'--');
+if(pf.desc)html+=mkRow('Desc','<span style="font-size:.78rem;word-break:break-all">'+pf.desc.slice(0,150)+'</span>');
+html+='</div>';
+
+// Security card
+html+='<div class="card"><h3>Security Analysis</h3>';
+html+=mkRow('Mint Auth',ti.isRenounced?'<span style="color:var(--g)">Renounced</span>':'<span style="color:var(--r)">ACTIVE</span>');
+html+=mkRow('Freeze Auth',!ti.freezeAuth?'<span style="color:var(--g)">None</span>':'<span style="color:var(--r)">ACTIVE</span>');
+html+=mkRow('Cluster',cl.found?'<span style="color:var(--r)">FOUND '+cl.pct.toFixed(1)+'%</span>':'<span style="color:var(--g)">Clean</span>');
+html+=mkRow('Bundle',bundle.detected?'<span style="color:var(--r)">DETECTED</span>':'<span style="color:var(--g)">Clean</span>');
+html+=mkRow('Honeypot',honey.safe?'<span style="color:var(--g)">Safe</span>':'<span style="color:var(--r)">FLAGS</span>');
+html+=mkRow('Dev Rep','<span style="color:'+devClr(dev.rep)+'">'+devLbl(dev.rep)+'</span>');
+html+=mkRow('Dev Tokens',dev.total);
+html+=mkRow('Dev SOL','<span style="color:var(--b)">'+dev.bal.toFixed(3)+'</span>');
+html+=mkRow('Socials',(pf.tw||pf.tg||pf.web)?'<span style="color:var(--g)">'+(pf.tw?'X ':'')+(pf.tg?'TG ':'')+(pf.web?'Web':'')+'</span>':'<span style="color:var(--r)">None</span>');
+html+='</div>';
+html+='</div>';
+
+// Holders
+html+='<div class="htable"><h3>Top Holders</h3>';
+html+=mkRow('Top 5','<span style="color:'+(hd.t5>30?'var(--r)':hd.t5>15?'var(--y)':'var(--g)')+'">'+hd.t5.toFixed(1)+'%</span>');
+html+='<div class="pbar"><div class="pfill" style="width:'+Math.min(hd.t5,100)+'%;background:'+(hd.t5>30?'var(--r)':hd.t5>15?'var(--y)':'var(--g)')+'"></div></div>';
+html+=mkRow('Top 10','<span style="color:'+(hd.t10>50?'var(--r)':hd.t10>25?'var(--y)':'var(--g)')+'">'+hd.t10.toFixed(1)+'%</span>');
+html+='<div class="pbar"><div class="pfill" style="width:'+Math.min(hd.t10,100)+'%;background:'+(hd.t10>50?'var(--r)':hd.t10>25?'var(--y)':'var(--g)')+'"></div></div>';
+
+html+='<table><thead><tr><th>#</th><th>Wallet</th><th>%</th><th>Note</th></tr></thead><tbody>';
+for(var h=0;h<Math.min(hd.list.length,15);h++){
+var hl=hd.list[h];var w=hl.owner||hl.addr;
+var c2=hl.pct>10?'var(--r)':hl.pct>5?'var(--y)':'var(--g)';
+var nt='';
+if(pf.bc&&w===pf.bc)nt='Bonding Curve';
+else if(pf.dev&&w===pf.dev)nt='Developer';
+else if(hl.pct>10)nt='Major Whale';
+else if(hl.pct>5)nt='Whale';
+html+='<tr><td>'+(h+1)+'</td><td><span class="mono">'+S(w)+'</span> <button class="copy-btn" onclick="C(\''+w+'\')">copy</button></td><td><b style="color:'+c2+'">'+hl.pct.toFixed(2)+'%</b></td><td style="color:#555;font-size:.75rem">'+nt+'</td></tr>';
+}
+html+='</tbody></table></div>';
+
+// Cluster
+if(cl.found){
+html+='<div class="cluster-alert"><h3>Cluster Alert</h3>';
+html+='<p style="color:#ff9999;font-size:.85rem;margin:8px 0">Coordinated wallets hold <b style="color:var(--r)">'+cl.pct.toFixed(1)+'%</b>. Risk: <b>'+(cl.risk==='high'?'HIGH':'MEDIUM')+'</b></p>';
+html+='<div class="pbar"><div class="pfill" style="width:'+Math.min(cl.pct,100)+'%;background:var(--r)"></div></div>';
+html+='</div>';
+}
+
+// Dev
+html+='<div class="dev-panel"><h3>Developer Analysis <span style="font-size:.75em;color:'+devClr(dev.rep)+'"> ('+devLbl(dev.rep)+')</span></h3>';
+html+=mkRow('Address','<span class="mono">'+S(dev.addr||'Unknown')+'</span>'+(dev.addr?' <button class="copy-btn" onclick="C(\''+dev.addr+'\')">copy</button>':''));
+html+=mkRow('Total Tokens',dev.total);
+html+=mkRow('Successful','<span style="color:var(--g)">'+dev.ok+'</span>');
+html+=mkRow('Rugged','<span style="color:var(--r)">'+dev.rugs+'</span>');
+html+=mkRow('Dead','<span style="color:var(--y)">'+dev.dead+'</span>');
+html+=mkRow('SOL Balance','<span style="color:var(--b)">'+dev.bal.toFixed(3)+'</span>');
+
+if(dev.tokens.length>0){
+html+='<div style="margin-top:16px"><b style="color:#555;font-size:.8rem">Token History:</b></div>';
+for(var d2=0;d2<Math.min(dev.tokens.length,12);d2++){
+var tk=dev.tokens[d2];
+var dc=tk.st==='live'?'live':tk.st==='rug'?'rug':'dead';
+var dl=tk.st==='live'?'ALIVE':tk.st==='rug'?'RUGGED':'DEAD';
+html+='<div class="dev-token" style="'+(tk.cur?'border:1px solid rgba(0,245,147,.25)':'')+'"><div style="flex:1"><div style="font-weight:600;color:'+(tk.cur?'var(--g)':'#ccc')+'">'+(tk.cur?'>> ':'')+tk.n+' ('+tk.s+')</div><span class="mono" style="font-size:.7rem">'+S(tk.m)+'</span></div><div style="text-align:right"><div style="font-size:.78rem;color:var(--b)">$'+F(tk.mc)+'</div><span class="dtag '+dc+'">'+dl+'</span></div></div>';
+}
+}
+html+='</div>';
+
+// Targets
+html+='<div class="target-panel"><h3>Target Analysis</h3>';
+html+='<p style="color:#555;font-size:.82rem;margin-bottom:14px">Current MCap: <b style="color:var(--g)">$'+F(mcap)+'</b></p>';
+html+='<div class="tgrid">';
+for(var t=0;t<targets.length;t++){
+var tg=targets[t];
+var tc=tg.p>40?'var(--g)':tg.p>20?'var(--y)':'var(--r)';
+html+='<div class="titem"><div class="tx" style="color:'+tc+'">'+tg.x+'</div><div class="tmc">$'+F(tg.mc)+'</div><div class="tp" style="color:'+tc+'">'+tg.p.toFixed(0)+'% prob</div></div>';
+}
+html+='</div></div>';
+
+// Risk breakdown
+html+='<div class="card" style="margin:20px 0"><h3>Risk Breakdown</h3>';
+for(var p=0;p<an.pros.length;p++)html+='<div class="ritem ok">'+an.pros[p]+'</div>';
+for(var q=0;q<an.risks.length;q++)html+='<div class="ritem bad">'+an.risks[q]+'</div>';
+html+='</div>';
+
+// Links
+html+='<div class="card" style="margin:20px 0"><h3>Links</h3><div class="links">';
+html+='<a href="https://pump.fun/'+mint+'" target="_blank" class="link a">Pump.Fun</a>';
+html+='<a href="https://solscan.io/token/'+mint+'" target="_blank" class="link b2">Solscan</a>';
+html+='<a href="https://birdeye.so/token/'+mint+'?chain=solana" target="_blank" class="link c">Birdeye</a>';
+html+='<a href="https://dexscreener.com/solana/'+mint+'" target="_blank" class="link b2">DexScreener</a>';
+html+='<a href="https://rugcheck.xyz/tokens/'+mint+'" target="_blank" class="link a">RugCheck</a>';
+if(pf.tw)html+='<a href="https://twitter.com/'+pf.tw+'" target="_blank" class="link c">Twitter</a>';
+if(pf.tg)html+='<a href="https://t.me/'+pf.tg+'" target="_blank" class="link b2">Telegram</a>';
+if(pf.web)html+='<a href="'+pf.web+'" target="_blank" class="link a">Website</a>';
+html+='</div></div>';
+
+html+='<div class="disc">This analysis is for educational purposes only and is NOT financial advice. Cryptocurrency trading involves high risk. Always DYOR.</div>';
+
+document.getElementById('res').innerHTML=html;
+document.getElementById('res').className='results on';
+document.getElementById('res').scrollIntoView({behavior:'smooth'});
+}
+
+/* ====== HELPERS ====== */
+function F(n){
+if(!n||n===0)return'0';
 if(n>=1e9)return(n/1e9).toFixed(2)+'B';
 if(n>=1e6)return(n/1e6).toFixed(2)+'M';
 if(n>=1e3)return(n/1e3).toFixed(2)+'K';
 return Number(n).toFixed(2);
 }
-function shorten(a){return a&&a.length>10?a.slice(0,6)+'...'+a.slice(-4):(a||'N/A');}
-function rw(l,v){return '<div class="rw"><span class="lb">'+l+'</span>'+v+'</div>';}
-function stc(l,v,c){return '<div class="stcd"><div class="stl">'+l+'</div><div class="stv" style="color:'+c+'">'+v+'</div></div>';}
-function devColor(r){return{scammer:'#ff4444',suspicious:'#ff6600',trusted:'#00ff88','new':'#ffc800',neutral:'#888'}[r]||'#888';}
-function devLabel(r){return{scammer:'SCAMMER',suspicious:'Suspicious',trusted:'Trusted','new':'New Dev',neutral:'Neutral',unknown:'Unknown'}[r]||'Unknown';}
-function cp(t){try{navigator.clipboard.writeText(t)}catch(e){}}
-function showLoad(v){document.getElementById('ldr').classList[v?'add':'remove']('on')}
-function hideRes(){document.getElementById('res').classList.remove('on')}
-function setTxt(t){document.getElementById('lt').textContent=t}
-function setBtnD(d){var b=document.getElementById('sb');b.disabled=d;b.innerHTML=d?'<span>...</span><span>Scanning</span>':'<span>&#128270;</span><span>SCAN</span>';}
-function showErr(m){var e=document.getElementById('eb');e.innerHTML=m;e.classList.add('on')}
-function hideErr(){document.getElementById('eb').classList.remove('on')}
+function S(a){return a&&a.length>10?a.slice(0,6)+'...'+a.slice(-4):(a||'N/A');}
+function mkRow(k,v){return'<div class="row"><span class="k">'+k+'</span><span class="v2">'+v+'</span></div>';}
+function mkStat(l,v,c){return'<div class="stat"><div class="l">'+l+'</div><div class="v" style="color:'+c+'">'+v+'</div></div>';}
+function devClr(r){return{scammer:'var(--r)',suspicious:'#ff6600',trusted:'var(--g)','new':'var(--y)',neutral:'#888'}[r]||'#888';}
+function devLbl(r){return{scammer:'SCAMMER',suspicious:'Suspicious',trusted:'Trusted','new':'New Dev',neutral:'Neutral',unknown:'Unknown'}[r]||'Unknown';}
+function C(t){try{navigator.clipboard.writeText(t)}catch(e){}}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
 
-document.getElementById('ta').addEventListener('keydown',function(e){if(e.key==='Enter')startScan()});
+// Loader
+function sLoad(v){document.getElementById('ldr').className=v?'loader on':'loader'}
+function sBtn(d){var b=document.getElementById('btn');b.disabled=!!d;b.textContent=d?'SCANNING...':'SCAN TOKEN';}
+function sErr(m){var e=document.getElementById('err');e.innerHTML=m;e.className='err on';}
+function hErr(){document.getElementById('err').className='err';}
 
-document.getElementById('ta').addEventListener('focus',async function(){
-if(this.value)return;
-try{var t=await navigator.clipboard.readText();if(/^[A-Za-z0-9]{32,44}$/.test(t)){this.value=t;this.style.borderColor='#00ff88';var self=this;setTimeout(function(){self.style.borderColor=''},1200);}}catch(e){}
-});
+function addStep(txt){
+var el=document.getElementById('lsteps');
+var idx=scanSteps.length;
+scanSteps.push(txt);
+var d=document.createElement('div');
+d.className='step active';d.id='step'+idx;
+d.innerHTML='<span class="st-dot wait"></span>'+txt;
+el.appendChild(d);
+document.getElementById('ltxt').textContent=txt;
+}
+function markStep(idx){
+var el=document.getElementById('step'+idx);
+if(el){el.className='step done';var dot=el.querySelector('.st-dot');if(dot){dot.className='st-dot on';}}
+}
 
-detectRPC();
+// Events
+document.getElementById('inp').addEventListener('keydown',function(e){if(e.key==='Enter')scan()});
+
+// Init
+initRPC();
 </script>
 </body>
 </html>
